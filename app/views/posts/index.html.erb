@@ -1,0 +1,163 @@
+<% content_for :title, "Posts - Longform" %>
+
+<main class="container">
+  <!-- Header -->
+  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+      <h1 style="margin-bottom: 0.5rem;">Your Posts</h1>
+      <p style="color: var(--pico-muted-color); margin: 0;">Manage your drafts and published content</p>
+    </div>
+    
+    <%= link_to new_post_path, role: "button" do %>
+      <span style="margin-right: 0.5rem;">+</span>
+      New Post
+    <% end %>
+  </header>
+  
+  <!-- Status Filters -->
+  <nav style="margin-bottom: 2rem;">
+    <ul style="display: flex; gap: 0.5rem; flex-wrap: wrap; list-style: none; padding: 0; margin: 0;">
+      <li>
+        <%= link_to posts_path, 
+            role: "button", 
+            class: params[:status].blank? ? "" : "outline" do %>
+          All (<%= @status_counts[:all] %>)
+        <% end %>
+      </li>
+      <li>
+        <%= link_to posts_path(status: 'draft'), 
+            role: "button", 
+            class: params[:status] == 'draft' ? "" : "outline" do %>
+          Drafts (<%= @status_counts[:draft] %>)
+        <% end %>
+      </li>
+      <li>
+        <%= link_to posts_path(status: 'published'), 
+            role: "button", 
+            class: params[:status] == 'published' ? "" : "outline" do %>
+          Published (<%= @status_counts[:published] %>)
+        <% end %>
+      </li>
+      <li>
+        <%= link_to posts_path(status: 'archived'), 
+            role: "button", 
+            class: params[:status] == 'archived' ? "" : "outline" do %>
+          Archived (<%= @status_counts[:archived] %>)
+        <% end %>
+      </li>
+    </ul>
+  </nav>
+  
+  <!-- Search -->
+  <%= form_with url: posts_path, method: :get, local: true, style: "margin-bottom: 2rem;" do |form| %>
+    <%= form.hidden_field :status, value: params[:status] %>
+    <div style="display: flex; gap: 0.5rem;">
+      <%= form.text_field :search, 
+          value: params[:search], 
+          placeholder: "Search posts..." %>
+      <%= form.submit "Search", class: "outline" %>
+    </div>
+  <% end %>
+  
+  <!-- Posts List -->
+  <% if @posts.any? %>
+    <div style="display: grid; gap: 1.5rem;">
+      <% @posts.each do |post| %>
+        <article style="border: 1px solid var(--pico-muted-border-color); border-radius: 0.5rem; padding: 1.5rem;">
+          <header style="margin-bottom: 1rem;">
+            <h3 style="margin: 0 0 0.5rem 0;">
+              <%= link_to post.title.presence || "Untitled", post, style: "text-decoration: none; color: var(--pico-color);" %>
+            </h3>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.875rem; color: var(--pico-muted-color);">
+              <% status_color = case post.status
+                when 'published' then 'ins'
+                when 'draft' then 'muted'
+                when 'archived' then 'muted'
+                when 'failed' then 'del'
+                else 'muted'
+                end %>
+              <span style="background: var(--pico-<%= status_color %>-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">
+                <%= post.status.upcase %>
+              </span>
+              
+              <span><%= time_ago_in_words(post.created_at) %> ago</span>
+              
+              <% if post.published_at %>
+                <span>Published <%= time_ago_in_words(post.published_at) %> ago</span>
+              <% end %>
+              
+              <span><%= pluralize(post.word_count, 'word') %></span>
+              <span><%= post.reading_time_minutes %> min read</span>
+            </div>
+          </header>
+          
+          <% if post.excerpt.present? %>
+            <p style="color: var(--pico-muted-color); margin-bottom: 1rem;">
+              <%= truncate(post.excerpt, length: 200) %>
+            </p>
+          <% end %>
+          
+          <!-- Action buttons for each post -->
+          <footer style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <%= link_to "View", post, role: "button", class: "outline", style: "font-size: 0.875rem;" %>
+            <%= link_to "Edit", edit_post_path(post), role: "button", class: "outline", style: "font-size: 0.875rem;" %>
+            
+            <% if post.draft? %>
+              <%= link_to "Publish", publish_post_path(post), 
+                  role: "button", style: "font-size: 0.875rem;", 
+                  data: { 
+                    turbo_method: :patch,
+                    turbo_confirm: "Are you sure you want to publish this post?" 
+                  } %>
+            <% elsif post.published? %>
+              <%= link_to "Unpublish", unpublish_post_path(post), 
+                  role: "button", class: "outline", style: "font-size: 0.875rem;", 
+                  data: { 
+                    turbo_method: :patch,
+                    turbo_confirm: "Are you sure you want to unpublish this post?" 
+                  } %>
+            <% end %>
+
+            <% if post.archived? %>
+              <%= link_to "Unarchive", unarchive_post_path(post), 
+                  role: "button", class: "outline", style: "font-size: 0.875rem; color: var(--pico-primary); border-color: var(--pico-primary);", 
+                  data: { 
+                    turbo_method: :patch,
+                    turbo_confirm: "Are you sure you want to unarchive this post?" 
+                  } %>
+            <% else %>
+              <%= link_to "Archive", archive_post_path(post), 
+                  role: "button", class: "outline", style: "font-size: 0.875rem; color: var(--pico-secondary); border-color: var(--pico-secondary);", 
+                  data: { 
+                    turbo_method: :patch,
+                    turbo_confirm: "Are you sure you want to archive this post?" 
+                  } %>
+            <% end %>
+            
+            <%= link_to "Delete", post_path(post), 
+                role: "button", class: "outline", style: "font-size: 0.875rem; color: var(--pico-del-color); border-color: var(--pico-del-color);", 
+                data: { 
+                  turbo_method: :delete,
+                  turbo_confirm: "Are you sure you want to delete this post? This action cannot be undone." 
+                } %>
+          </footer>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div style="text-align: center; padding: 3rem;">
+      <h3 style="color: var(--pico-muted-color);">No posts found</h3>
+      <p style="color: var(--pico-muted-color); margin-bottom: 2rem;">
+        <% if params[:search].present? %>
+          No posts match your search for "<%= params[:search] %>".
+        <% elsif params[:status].present? %>
+          You don't have any <%= params[:status] %> posts yet.
+        <% else %>
+          You haven't created any posts yet.
+        <% end %>
+      </p>
+      <%= link_to "Create your first post", new_post_path, role: "button" %>
+    </div>
+  <% end %>
+</main>

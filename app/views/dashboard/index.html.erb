@@ -1,0 +1,158 @@
+<% content_for :title, "Dashboard - Longform" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Welcome back, <%= current_user.display_name %>!</h1>
+    <p class="text-gray-600 mt-2">Here's what's happening with your content.</p>
+  </div>
+  
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-sm">
+      <div class="flex items-center">
+        <div class="p-2 bg-blue-100 rounded-lg">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Total Posts</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @draft_count + @published_count %></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-lg shadow-sm">
+      <div class="flex items-center">
+        <div class="p-2 bg-yellow-100 rounded-lg">
+          <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Drafts</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @draft_count %></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-lg shadow-sm">
+      <div class="flex items-center">
+        <div class="p-2 bg-green-100 rounded-lg">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Published</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @published_count %></p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-lg shadow-sm">
+      <div class="flex items-center">
+        <div class="p-2 bg-purple-100 rounded-lg">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500">Total Words</p>
+          <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@total_words) %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Quick Actions -->
+  <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+    <div class="flex flex-wrap gap-4">
+      <%= link_to new_post_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        New Post
+      <% end %>
+      
+      <%= link_to posts_path(status: 'draft'), class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        View Drafts
+      <% end %>
+      
+      <%= link_to posts_path(status: 'published'), class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+        </svg>
+        View Published
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Recent Posts -->
+  <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-semibold text-gray-900">Recent Posts</h2>
+      <%= link_to posts_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" do %>
+        View all →
+      <% end %>
+    </div>
+    
+    <% if @recent_posts.any? %>
+      <div class="space-y-4">
+        <% @recent_posts.each do |post| %>
+          <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h3 class="font-medium text-gray-900 mb-1">
+                  <%= link_to post.title, post, class: "hover:text-blue-600" %>
+                </h3>
+                <p class="text-sm text-gray-600 mb-2">
+                  <%= truncate(post.excerpt || post.content.to_plain_text, length: 120) %>
+                </p>
+                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= post.status == 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                    <%= post.status.capitalize %>
+                  </span>
+                  <span><%= time_ago_in_words(post.created_at) %> ago</span>
+                  <span><%= pluralize(post.word_count, 'word') %></span>
+                  <span><%= post.reading_time_minutes %> min read</span>
+                </div>
+              </div>
+              
+              <div class="ml-4 flex items-center space-x-2">
+                <%= link_to edit_post_path(post), class: "text-gray-400 hover:text-gray-600" do %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                <% end %>
+                
+                <% if post.draft? && post.can_publish? %>
+                  <%= link_to publish_post_path(post), method: :patch, class: "text-green-400 hover:text-green-600", title: "Publish to Bluesky" do %>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                    </svg>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-8">
+        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
+        <p class="text-gray-600 mb-4">Start writing your first longform post for Bluesky.</p>
+        <%= link_to new_post_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
+          Create your first post
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

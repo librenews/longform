@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Longform" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <nav class="container">
+      <ul>
+        <li>
+          <%= link_to root_path, class: "brand" do %>
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Longform
+          <% end %>
+        </li>
+      </ul>
+      
+      <ul>
+        <% if user_signed_in? %>
+          <!-- Desktop Navigation -->
+          <li class="desktop-nav">
+            <% unless current_page?(dashboard_path) %>
+              <%= link_to "Dashboard", dashboard_path, role: "button", class: "outline" %>
+            <% end %>
+          </li>
+          <li class="desktop-nav">
+            <%= link_to "Posts", posts_path, role: "button", class: "outline" %>
+          </li>
+          <li class="desktop-nav">
+            <%= link_to "New Post", new_post_path, role: "button" %>
+          </li>
+
+          <!-- Mobile Menu -->
+          <li>
+            <details class="dropdown mobile-only">
+              <summary role="button" class="outline">☰</summary>
+              <ul>
+                <% unless current_page?(dashboard_path) %>
+                  <li><%= link_to "Dashboard", dashboard_path %></li>
+                <% end %>
+                <li><%= link_to "Posts", posts_path %></li>
+                <li><%= link_to "New Post", new_post_path %></li>
+              </ul>
+            </details>
+          </li>
+
+          <!-- User Menu -->
+          <li>
+            <details class="dropdown">
+              <summary role="button" class="outline">
+                <img src="<%= current_user.avatar_url_or_default %>" alt="<%= current_user.display_name %>" 
+                     style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
+                <span class="desktop-nav"><%= current_user.display_name %></span>
+              </summary>
+              <ul>
+                <li>
+                  <small><%= current_user.handle %></small>
+                </li>
+                <li>
+                  <%= link_to sign_out_path, data: { "turbo-method": :delete } do %>
+                    Sign Out
+                  <% end %>
+                </li>
+              </ul>
+            </details>
+          </li>
+        <% else %>
+          <!-- Non-authenticated state -->
+          <li>
+            <%= link_to "Home", root_path, role: "button", class: "outline" %>
+          </li>
+          <li>
+            <%= link_to root_path, role: "button" do %>
+              <span class="mobile-only">Sign In</span>
+              <span class="desktop-nav">Sign in with Bluesky</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </nav>
+
+    <style>
+      /* Custom responsive utilities */
+      @media (max-width: 768px) {
+        .desktop-nav { display: none !important; }
+      }
+      @media (min-width: 769px) {
+        .mobile-only { display: none !important; }
+      }
+      
+      /* Brand styling */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      
+      /* Dropdown positioning */
+      .dropdown {
+        position: relative;
+      }
+      
+      .dropdown ul {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        min-width: 200px;
+        z-index: 1000;
+      }
+    </style>
+
+    <% if notice %>
+      <div class="container">
+        <article style="background-color: var(--pico-ins-color); padding: 1rem; border-radius: 0.5rem;">
+          <%= notice %>
+        </article>
+      </div>
+    <% end %>
+
+    <% if alert %>
+      <div class="container">
+        <article style="background-color: var(--pico-del-color); padding: 1rem; border-radius: 0.5rem;">
+          <%= alert %>
+        </article>
+      </div>
+    <% end %>
+
+    <main class="container">
+      <%= yield %>
+    </main>
+  </body>
+</html>

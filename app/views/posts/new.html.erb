@@ -1,0 +1,308 @@
+<% content_for :title, "New Post - Longform" %>
+
+<main class="container">
+  <!-- Post Editor Header -->
+  <header style="border-bottom: 1px solid var(--pico-muted-border-color); padding-bottom: 1rem; margin-bottom: 2rem;">
+    <nav aria-label="breadcrumb">
+      <%= link_to posts_path, role: "button", class: "outline secondary" do %>
+        ← Back to Posts
+      <% end %>
+    </nav>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+      <h1 style="margin: 0;">Create New Post</h1>
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <span class="save-status" style="color: var(--pico-muted-color); font-size: 0.875rem;">Draft saved</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Post Form -->
+  <%= form_with model: @post, local: true, data: { 
+        controller: "editor",
+        editor_save_url_value: @post.persisted? ? post_path(@post) : posts_path
+      } do |form| %>
+    
+    <!-- Display validation errors -->
+    <%= render 'shared/errors', object: @post %>
+    
+    <!-- Title -->
+    <div style="margin-bottom: 2rem;">
+      <%= form.text_field :title, 
+          placeholder: "Post title...", 
+          style: "font-size: 2.5rem; font-weight: 600; border: none; outline: none; width: 100%; background: transparent; padding: 0;",
+          data: { 
+            action: "input->editor#autoSave",
+            target: "editor.title"
+          } %>
+    </div>
+    
+    <!-- Rich Text Editor -->
+    <div style="margin-bottom: 2rem;">
+      <%= form.rich_text_area :content,
+          placeholder: "Start writing your longform post...",
+          style: "min-height: 60vh; font-size: 1.125rem; line-height: 1.7;",
+          data: {
+            target: "editor.content",
+            action: "trix-change->editor#trixChange"
+          } %>
+    </div>
+    
+    <!-- Actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid var(--pico-muted-border-color);">
+      <div class="writing-stats" style="font-size: 0.875rem; color: var(--pico-muted-color);">
+        <span>Words: <strong id="word-count">0</strong></span>
+        <span style="margin-left: 1rem;">Reading time: <strong id="reading-time">0 min</strong></span>
+      </div>
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <%= form.submit "Save Draft", class: "outline" %>
+        <%= form.submit "Publish", 
+            data: { confirm: "Ready to publish this post to Bluesky?" },
+            formaction: (@post.persisted? ? publish_post_path(@post) : nil) %>
+      </div>
+    </div>
+    
+  <% end %>
+</main>
+
+<!-- Enhanced Editor Styles -->
+<style>
+  /* Clean title input */
+  input[name="post[title]"] {
+    color: var(--pico-color);
+    font-family: var(--pico-font-family);
+  }
+  
+  input[name="post[title]"]::placeholder {
+    color: var(--pico-muted-color);
+    opacity: 0.7;
+  }
+  
+  /* Enhanced Trix editor */
+  trix-editor {
+    border: none !important;
+    padding: 0 !important;
+    font-family: var(--pico-font-family);
+    color: var(--pico-color);
+    background: transparent !important;
+  }
+  
+  trix-editor::placeholder {
+    color: var(--pico-muted-color);
+    opacity: 0.7;
+  }
+  
+  /* Better paragraph spacing */
+  trix-editor p {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Clean headings */
+  trix-editor h1, trix-editor h2, trix-editor h3 {
+    color: var(--pico-color);
+    font-family: var(--pico-font-family);
+  }
+  
+  /* Hide default Trix toolbar - we'll add our own if needed */
+  trix-toolbar {
+    display: none;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    input[name="post[title]"] {
+      font-size: 2rem;
+    }
+    
+    .writing-stats span {
+      display: block;
+      margin-left: 0 !important;
+    }
+  }
+</style>
+            
+
+<!-- Enhanced CSS for Medium-like experience -->
+<style>
+  /* Custom typography for the editor */
+  .title-input {
+    font-family: 'GT Sectra', 'Times New Roman', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  
+  .title-input::placeholder {
+    opacity: 0.6;
+  }
+  
+  /* Trix editor customization for Medium-like feel */
+  trix-editor {
+    font-family: 'Charter', 'Times New Roman', Georgia, serif;
+    font-size: 1.25rem;
+    line-height: 1.75;
+    color: #1a1a1a;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    min-height: 60vh;
+    letter-spacing: -0.003em;
+  }
+  
+  trix-editor::placeholder {
+    color: #a1a1aa;
+    opacity: 0.7;
+  }
+  
+  /* Hide trix toolbar initially - we'll add a floating one */
+  trix-toolbar {
+    display: none;
+  }
+  
+  /* Custom paragraph styling */
+  trix-editor p {
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+  }
+  
+  /* Beautiful headings */
+  trix-editor h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111827;
+    margin: 2.5rem 0 1.5rem 0;
+    letter-spacing: -0.025em;
+    font-family: 'GT Sectra', 'Times New Roman', Georgia, serif;
+  }
+  
+  trix-editor h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #111827;
+    margin: 2rem 0 1rem 0;
+    letter-spacing: -0.02em;
+  }
+  
+  trix-editor h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #111827;
+    margin: 1.5rem 0 0.75rem 0;
+    letter-spacing: -0.015em;
+  }
+  
+  /* Quote styling */
+  trix-editor blockquote {
+    border-left: 3px solid #e5e7eb;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    font-size: 1.125rem;
+    color: #4b5563;
+    position: relative;
+  }
+  
+  trix-editor blockquote::before {
+    content: '"';
+    font-size: 4rem;
+    color: #e5e7eb;
+    position: absolute;
+    left: -0.5rem;
+    top: -1rem;
+    font-family: Georgia, serif;
+  }
+  
+  /* Code styling */
+  trix-editor code {
+    background-color: #f3f4f6;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    font-size: 0.875rem;
+    color: #e11d48;
+  }
+  
+  trix-editor pre {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 2rem 0;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+  
+  /* List styling */
+  trix-editor ul, trix-editor ol {
+    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+  }
+  
+  trix-editor li {
+    margin-bottom: 0.5rem;
+    line-height: 1.75;
+  }
+  
+  /* Link styling */
+  trix-editor a {
+    color: #059669;
+    text-decoration: underline;
+    text-decoration-color: #d1fae5;
+    text-underline-offset: 0.125rem;
+    transition: all 0.2s ease;
+  }
+  
+  trix-editor a:hover {
+    text-decoration-color: #059669;
+  }
+  
+  /* Selection styling */
+  trix-editor ::selection {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  
+  /* Focus states */
+  .title-input:focus,
+  trix-editor:focus {
+    outline: none;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .title-input {
+      font-size: 2.5rem;
+    }
+    
+    trix-editor {
+      font-size: 1.125rem;
+    }
+    
+    #writing-stats {
+      display: none;
+    }
+  }
+  
+  /* Smooth auto-save indicator */
+  #save-status {
+    transition: all 0.3s ease;
+  }
+  
+  #save-status.saving {
+    color: #f59e0b;
+  }
+  
+  #save-status.saved {
+    color: #10b981;
+  }
+  
+  #save-status.error {
+    color: #ef4444;
+  }
+</style>

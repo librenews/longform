@@ -1,0 +1,401 @@
+<style>
+  /* Typography Imports */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  
+  /* Enhanced Typography */
+  .title-input {
+    font-family: 'GT Sectra', 'Georgia', serif;
+    letter-spacing: -0.02em;
+    background: transparent;
+  }
+  
+  .title-input::placeholder {
+    color: #D1D5DB;
+  }
+  
+  .title-input:focus {
+    outline: none;
+  }
+  
+  /* Custom Trix Editor Styling */
+  .content-editor {
+    min-height: 500px;
+    border: none;
+    outline: none;
+    font-family: 'Charter', 'Georgia', serif;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  
+  trix-editor {
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 500px;
+    font-family: 'Charter', 'Georgia', serif !important;
+    font-size: 1.125rem !important;
+    line-height: 1.7 !important;
+    color: #374151 !important;
+  }
+  
+  trix-editor:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  trix-editor [data-trix-mutable] {
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    user-select: auto !important;
+  }
+  
+  /* Trix Toolbar Customization */
+  trix-toolbar {
+    border: none !important;
+    background: #F9FAFB !important;
+    border-radius: 8px !important;
+    margin-bottom: 2rem !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  trix-toolbar .trix-button-group {
+    border: none !important;
+    margin-right: 0.75rem !important;
+  }
+  
+  trix-toolbar .trix-button {
+    border: none !important;
+    background: transparent !important;
+    color: #6B7280 !important;
+    padding: 0.5rem !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  trix-toolbar .trix-button:hover {
+    background: #E5E7EB !important;
+    color: #374151 !important;
+  }
+  
+  trix-toolbar .trix-button.trix-active {
+    background: #10B981 !important;
+    color: white !important;
+  }
+  
+  /* Enhanced Content Styling */
+  trix-editor h1 {
+    font-family: 'GT Sectra', 'Georgia', serif !important;
+    font-size: 2.25rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    margin: 2rem 0 1rem 0 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+  }
+  
+  trix-editor h2 {
+    font-family: 'GT Sectra', 'Georgia', serif !important;
+    font-size: 1.875rem !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    margin: 2rem 0 1rem 0 !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.3 !important;
+  }
+  
+  trix-editor h3 {
+    font-family: 'GT Sectra', 'Georgia', serif !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    margin: 1.5rem 0 0.75rem 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+  
+  trix-editor blockquote {
+    border-left: 4px solid #10B981 !important;
+    padding-left: 1.5rem !important;
+    margin: 2rem 0 !important;
+    font-style: italic !important;
+    font-size: 1.25rem !important;
+    color: #4B5563 !important;
+    background: #F9FAFB !important;
+    padding: 1.5rem !important;
+    border-radius: 0 8px 8px 0 !important;
+  }
+  
+  trix-editor ul, trix-editor ol {
+    margin: 1rem 0 !important;
+    padding-left: 1.5rem !important;
+  }
+  
+  trix-editor li {
+    margin-bottom: 0.5rem !important;
+    line-height: 1.6 !important;
+  }
+  
+  trix-editor pre {
+    background: #1F2937 !important;
+    color: #F9FAFB !important;
+    padding: 1.5rem !important;
+    border-radius: 8px !important;
+    overflow-x: auto !important;
+    margin: 2rem 0 !important;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  trix-editor code {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
+    font-size: 0.9em !important;
+    background: #F3F4F6 !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 3px !important;
+    color: #DC2626 !important;
+  }
+  
+  trix-editor a {
+    color: #10B981 !important;
+    text-decoration: underline !important;
+    text-decoration-color: rgba(16, 185, 129, 0.3) !important;
+    text-underline-offset: 0.2em !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  trix-editor a:hover {
+    color: #059669 !important;
+    text-decoration-color: rgba(5, 150, 105, 0.6) !important;
+  }
+  
+  /* Selection Styling */
+  trix-editor ::selection {
+    background: rgba(16, 185, 129, 0.2) !important;
+  }
+  
+  trix-editor ::-moz-selection {
+    background: rgba(16, 185, 129, 0.2) !important;
+  }
+  
+  /* Auto-save indicator */
+  .save-indicator {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .save-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .save-indicator.error {
+    background: rgba(239, 68, 68, 0.9);
+  }
+  
+  /* Focus states */
+  .title-container:focus-within,
+  .content-container:focus-within {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Writing stats styling */
+  #writing-stats {
+    transition: all 0.3s ease;
+  }
+  
+  #writing-stats:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .title-input {
+      font-size: 2.25rem;
+      line-height: 1.2;
+    }
+    
+    trix-editor {
+      font-size: 1rem !important;
+    }
+    
+    #writing-stats {
+      display: none;
+    }
+    
+    trix-toolbar {
+      position: sticky;
+      top: 4rem;
+      z-index: 10;
+      margin-bottom: 1rem !important;
+    }
+  }
+  
+  /* Loading states */
+  .loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  
+  /* Custom scrollbar for better aesthetics */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #F3F4F6;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save functionality
+    const form = document.querySelector('[data-controller="editor"]');
+    if (!form) return;
+    
+    const titleInput = form.querySelector('[data-target="editor.title"]');
+    const editorContainer = form.querySelector('[data-target="editor.editorContainer"]');
+    const trixEditor = editorContainer?.querySelector('trix-editor');
+    const saveUrl = form.dataset.editorSaveUrlValue;
+    
+    let saveTimeout;
+    let lastSavedContent = '';
+    
+    function createSaveIndicator() {
+      let indicator = document.getElementById('save-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'save-indicator';
+        indicator.className = 'save-indicator';
+        document.body.appendChild(indicator);
+      }
+      return indicator;
+    }
+    
+    function showSaveIndicator(message, isError = false) {
+      const indicator = createSaveIndicator();
+      indicator.textContent = message;
+      indicator.className = `save-indicator ${isError ? 'error' : ''}`;
+      
+      // Force reflow and show
+      indicator.offsetHeight;
+      indicator.classList.add('show');
+      
+      setTimeout(() => {
+        indicator.classList.remove('show');
+      }, 2000);
+    }
+    
+    function autoSave() {
+      if (!saveUrl) return;
+      
+      const title = titleInput?.value || '';
+      const content = trixEditor?.editor?.getDocument?.()?.toString?.() || '';
+      const currentContent = title + content;
+      
+      if (currentContent === lastSavedContent) return;
+      
+      const formData = new FormData();
+      formData.append('post[title]', title);
+      formData.append('post[content]', content);
+      formData.append('_method', 'PATCH');
+      
+      // Get CSRF token
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (token) {
+        formData.append('authenticity_token', token);
+      }
+      
+      fetch(saveUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          lastSavedContent = currentContent;
+          showSaveIndicator('Saved');
+          
+          // Update save status in header
+          const saveStatus = document.getElementById('save-status');
+          if (saveStatus) {
+            saveStatus.textContent = 'Just saved';
+          }
+        } else {
+          throw new Error('Save failed');
+        }
+      })
+      .catch(() => {
+        showSaveIndicator('Failed to save', true);
+      });
+    }
+    
+    function debounceAutoSave() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(autoSave, 2000);
+    }
+    
+    // Attach event listeners
+    if (titleInput) {
+      titleInput.addEventListener('input', debounceAutoSave);
+      
+      // Auto-resize title input
+      titleInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+      });
+    }
+    
+    if (trixEditor) {
+      trixEditor.addEventListener('trix-change', debounceAutoSave);
+    }
+    
+    // Update word count
+    function updateWordCount() {
+      const content = trixEditor?.editor?.getDocument?.()?.toString?.() || '';
+      const words = content.trim().split(/\s+/).filter(word => word.length > 0).length;
+      const chars = content.length;
+      const readingTime = Math.max(1, Math.ceil(words / 200));
+      
+      const wordCountEl = document.getElementById('word-count');
+      const charCountEl = document.getElementById('char-count');
+      const readingTimeEl = document.getElementById('reading-time');
+      
+      if (wordCountEl) wordCountEl.textContent = words;
+      if (charCountEl) charCountEl.textContent = chars;
+      if (readingTimeEl) readingTimeEl.textContent = readingTime + ' min';
+    }
+    
+    if (trixEditor) {
+      trixEditor.addEventListener('trix-change', updateWordCount);
+      updateWordCount(); // Initial count
+    }
+  });
+</script>

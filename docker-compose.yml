@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://longform:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - RAILS_ENV=${RAILS_ENV:-production}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - BLUESKY_CLIENT_ID=${BLUESKY_CLIENT_ID}
+      - BLUESKY_CLIENT_SECRET=${BLUESKY_CLIENT_SECRET}
+      - BLUESKY_REDIRECT_URI=${BLUESKY_REDIRECT_URI}
+      - APP_HOST=${APP_HOST}
+      - APP_NAME=${APP_NAME}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./storage:/app/storage
+      - ./log:/app/log
+    command: ["rails", "server", "-b", "0.0.0.0"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-longform_production}
+      - POSTGRES_USER=${POSTGRES_USER:-longform}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-longform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./public:/var/www/public:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
