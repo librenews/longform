@@ -183,24 +183,34 @@
       }
       
       function updateToolbarState() {
-        if (!editor || !trixSelection) return;
+        if (!editor) return;
         
         const buttons = toolbar.querySelectorAll('button');
         buttons.forEach(button => {
           button.classList.remove('active');
         });
         
-        // Check current formatting using Trix API
-        const attributes = editor.getSelectedDocument().getCommonAttributes();
-        
-        if (attributes.bold) {
-          toolbar.querySelector('[data-action="bold"]').classList.add('active');
-        }
-        if (attributes.italic) {
-          toolbar.querySelector('[data-action="italic"]').classList.add('active');
-        }
-        if (attributes.href) {
-          toolbar.querySelector('[data-action="link"]').classList.add('active');
+        // Get current selection attributes
+        const range = editor.getSelectedRange();
+        if (range) {
+          const attributes = editor.getDocument().getCommonAttributesAtRange(range);
+          
+          if (attributes.bold) {
+            const boldBtn = toolbar.querySelector('[data-action="bold"]');
+            if (boldBtn) boldBtn.classList.add('active');
+          }
+          if (attributes.italic) {
+            const italicBtn = toolbar.querySelector('[data-action="italic"]');
+            if (italicBtn) italicBtn.classList.add('active');
+          }
+          if (attributes.href) {
+            const linkBtn = toolbar.querySelector('[data-action="link"]');
+            if (linkBtn) linkBtn.classList.add('active');
+          }
+          if (attributes.quote) {
+            const quoteBtn = toolbar.querySelector('[data-action="quote"]');
+            if (quoteBtn) quoteBtn.classList.add('active');
+          }
         }
       }
       
@@ -208,32 +218,50 @@
       toolbar.addEventListener('click', function(e) {
         e.preventDefault();
         const button = e.target.closest('button');
-        if (!button || !editor || !trixSelection) return;
+        if (!button || !editor) return;
         
         const action = button.getAttribute('data-action');
         
-        // Set selection in Trix
-        editor.setSelectedRange(trixSelection);
+        // Get current selection and attributes
+        const range = editor.getSelectedRange();
+        const attributes = editor.getDocument().getCommonAttributesAtRange(range);
         
         switch (action) {
           case 'bold':
-            editor.activateAttribute('bold');
+            if (attributes.bold) {
+              editor.deactivateAttribute('bold');
+            } else {
+              editor.activateAttribute('bold');
+            }
             break;
           case 'italic':
-            editor.activateAttribute('italic');
+            if (attributes.italic) {
+              editor.deactivateAttribute('italic');
+            } else {
+              editor.activateAttribute('italic');
+            }
             break;
           case 'link':
-            const url = prompt('Enter URL:');
-            if (url) {
-              editor.activateAttribute('href', url);
+            if (attributes.href) {
+              editor.deactivateAttribute('href');
+            } else {
+              const url = prompt('Enter URL:');
+              if (url) {
+                editor.activateAttribute('href', url);
+              }
             }
             break;
           case 'quote':
-            editor.activateAttribute('blockquote');
+            if (attributes.quote) {
+              editor.deactivateAttribute('quote');
+            } else {
+              editor.activateAttribute('quote');
+            }
             break;
         }
         
-        updateToolbarState();
+        // Update toolbar state after a brief delay to let Trix process the change
+        setTimeout(updateToolbarState, 50);
       });
       
       // Keyboard shortcuts
@@ -244,17 +272,35 @@
           switch (e.key) {
             case 'b':
               e.preventDefault();
-              editor.activateAttribute('bold');
+              const range = editor.getSelectedRange();
+              const attributes = editor.getDocument().getCommonAttributesAtRange(range);
+              if (attributes.bold) {
+                editor.deactivateAttribute('bold');
+              } else {
+                editor.activateAttribute('bold');
+              }
               break;
             case 'i':
               e.preventDefault();
-              editor.activateAttribute('italic');
+              const italicRange = editor.getSelectedRange();
+              const italicAttrs = editor.getDocument().getCommonAttributesAtRange(italicRange);
+              if (italicAttrs.italic) {
+                editor.deactivateAttribute('italic');
+              } else {
+                editor.activateAttribute('italic');
+              }
               break;
             case 'k':
               e.preventDefault();
-              const url = prompt('Enter URL:');
-              if (url) {
-                editor.activateAttribute('href', url);
+              const linkRange = editor.getSelectedRange();
+              const linkAttrs = editor.getDocument().getCommonAttributesAtRange(linkRange);
+              if (linkAttrs.href) {
+                editor.deactivateAttribute('href');
+              } else {
+                const url = prompt('Enter URL:');
+                if (url) {
+                  editor.activateAttribute('href', url);
+                }
               }
               break;
           }
