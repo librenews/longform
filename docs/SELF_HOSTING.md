@@ -255,11 +255,41 @@ sudo systemctl restart your-longform-service
 
 ### Branding
 
-Edit these files to customize your instance:
+You can easily customize your Longform instance's branding:
+
+#### Application Name
+Edit `config/application.rb`:
+```ruby
+# Change the app name (displays in navigation and page titles)
+config.app_name = "Your Blog Name"
+```
+
+#### Logo
+1. Add your logo file to `app/assets/images/`
+   - Recommended: SVG format for scalability
+   - Supported: PNG, JPG, SVG
+
+2. Configure the logo in `config/application.rb`:
+```ruby
+# For SVG logo (inlined, styleable with CSS)
+config.app_logo = "logo.svg"
+
+# For PNG/JPG logo (image tag)
+config.app_logo = "logo.png"
+
+# For text-only branding (no logo)
+config.app_logo = nil
+```
+
+3. Restart your application for configuration changes to take effect
+
+#### Advanced Customization
+For deeper customization, edit these files:
 
 - `app/views/layouts/application.html.erb` - Main layout
+- `app/views/layouts/editor.html.erb` - Editor layout  
 - `app/assets/stylesheets/application.scss` - Styles
-- `config/application.rb` - Application name and settings
+- `app/helpers/application_helper.rb` - Branding helper methods
 
 ### Features
 

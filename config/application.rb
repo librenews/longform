@@ -36,6 +36,10 @@ module Longform
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Application branding configuration
+    config.app_name = "Longform"
+    config.app_logo = "logo.png" # Set to an image path to use a logo instead of text
+
     # Don't generate system test files.
     config.generators.system_tests = nil
   end
