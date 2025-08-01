@@ -33,8 +33,12 @@ gem "omniauth-rails_csrf_protection"
 gem "omniauth-atproto"
 
 # HTTP client for Bluesky API
+# HTTP clients for API requests
 gem "faraday"
 gem "faraday-retry"
+
+# JWT for DPoP token generation
+gem "jwt"
 
 # Pagination
 gem "kaminari"

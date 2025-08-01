@@ -9,7 +9,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
         authorize_url: "https://bsky.social/oauth/authorize",
         token_url: "https://bsky.social/oauth/token"
     },
-    scope: "atproto transition:generic",
+    scope: "atproto transition:generic transition:chat.bsky",
     private_key: OmniAuth::Atproto::KeyManager.current_private_key,
     client_jwk: OmniAuth::Atproto::KeyManager.current_jwk,
     setup: lambda { |env|
@@ -19,6 +19,8 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       if handle.present?
         env['rack.session']['pending_handle'] = handle
       end
+      Rails.logger.info "[OmniAuth] Bluesky OAuth authorize_url: https://bsky.social/oauth/authorize"
+      Rails.logger.info "[OmniAuth] Bluesky OAuth scope: atproto transition:generic transition:chat.bsky"
     })
 end
 

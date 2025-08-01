@@ -1,6 +1,6 @@
 # Longform
 
-A beautiful, minimalist blogging platform for creating and managing longform content with Bluesky integration.
+A beautiful, minimalist blogging platform for creating and managing longform content with **full Bluesky publishing integration**.
 
 ## 🌟 Features
 
@@ -11,16 +11,24 @@ A beautiful, minimalist blogging platform for creating and managing longform con
 - **Search & Filtering** - Find content quickly with status-based filtering and search
 - **Word Count & Reading Time** - Automatic content analysis and metadata
 
+### Bluesky Integration ✨
+- **OAuth 2.0 Authentication** - Secure login with your Bluesky account
+- **DPoP Authentication** - Advanced security with Demonstrating Proof of Possession
+- **One-Click Publishing** - Publish posts directly to Bluesky with a single click
+- **PDS Endpoint Discovery** - Automatic resolution of your Personal Data Server
+- **AT Protocol Compliance** - Full support for the AT Protocol specification
+
 ### Content Organization
 - **Draft System** - Save and iterate on unpublished content
-- **Publishing Workflow** - Seamless draft-to-published transitions  
+- **Publishing Workflow** - Seamless draft-to-published transitions with Bluesky sync
 - **Archive System** - Hide posts without permanent deletion
 - **Bulk Operations** - Manage multiple posts efficiently
 
 ### Authentication & Security
-- **Bluesky OAuth Integration** - Secure authentication with AT Protocol
+- **AT Protocol OAuth** - Industry-standard authentication with enhanced security
+- **DPoP Token Management** - Cryptographic proof of key possession
 - **Avatar Fetching** - Automatic profile integration from Bluesky
-- **Session Management** - Secure user sessions and data protection
+- **Secure Key Management** - Environment-specific cryptographic keys
 
 ### User Experience
 - **Responsive Design** - Clean, mobile-friendly interface with PicoCSS
@@ -95,8 +103,46 @@ docker-compose exec app rails db:create db:migrate
 - **Database**: PostgreSQL  
 - **Frontend**: Turbo + Stimulus + PicoCSS
 - **Rich Text**: Action Text with Trix editor
-- **Authentication**: AT Protocol OAuth (Bluesky)
+- **Authentication**: AT Protocol OAuth with DPoP (Bluesky)
+- **HTTP Client**: Faraday for AT Protocol API calls
+- **Cryptography**: JWT with ES256 for DPoP token generation
 - **Deployment**: Docker-ready with Dockerfile and docker-compose.yml
+
+## 🔐 AT Protocol Integration
+
+Longform implements a complete AT Protocol OAuth flow with advanced security features:
+
+### DPoP Authentication
+- **JWT Token Generation** - ES256-signed tokens with proof of key possession
+- **Nonce Handling** - Automatic challenge-response flow for enhanced security  
+- **Access Token Hashing** - SHA-256 hashing for token binding verification
+- **PDS Discovery** - Automatic resolution of user's Personal Data Server
+
+### Technical Implementation
+```ruby
+# DPoP token structure
+{
+  typ: 'dpop+jwt',           # Token type
+  alg: 'ES256',              # Signing algorithm
+  jwk: user_public_key       # Public key for verification
+}
+
+# Payload includes:
+{
+  jti: unique_id,            # JWT ID for replay protection
+  htm: 'POST',               # HTTP method
+  htu: pds_endpoint,         # Target URI
+  iat: timestamp,            # Issued at time
+  ath: token_hash,           # Access token hash
+  nonce: server_nonce        # Server-provided nonce
+}
+```
+
+### OAuth Flow
+1. **Client Registration** - Dynamic client metadata with JWKS endpoint
+2. **Authorization Request** - PKCE-enabled OAuth 2.0 flow
+3. **Token Exchange** - DPoP-bound access token acquisition
+4. **API Requests** - Authenticated calls to user's PDS with DPoP proofs
 
 ## 📊 Post Status System
 

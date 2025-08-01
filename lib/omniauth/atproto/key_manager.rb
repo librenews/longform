@@ -25,16 +25,16 @@ module OmniAuth
         end
 
         def generate_keys
-          Rails.logger.info "Generating new AT Protocol key pair..."
+          Rails.logger.info "Generating new AT Protocol EC key pair..."
           
-          # Generate EC P-256 key pair
+          # Generate EC P-256 key pair for ES256 (as required by AT Protocol)
           key = OpenSSL::PKey::EC.generate('prime256v1')
           
           # Save private key
           File.write(PRIVATE_KEY_PATH, key.to_pem)
           File.chmod(0600, PRIVATE_KEY_PATH) # Secure permissions
           
-          # Generate JWK
+          # Generate JWK for EC key
           public_key_point = key.public_key
           x = public_key_point.to_bn(:uncompressed).to_s(2)[1..32]
           y = public_key_point.to_bn(:uncompressed).to_s(2)[33..64]

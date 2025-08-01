@@ -2,28 +2,29 @@ class PublishToBlueskyJob < ApplicationJob
   queue_as :default
   
   def perform(post)
-    return unless post.published? && post.user.valid_token?
+    return unless post.published?
+    return unless post.user.has_valid_bluesky_token?
     
     begin
-      publisher = BlueskyPublisher.new(post)
-      result = publisher.publish
+      publisher = BlueskyDpopPublisher.new(post.user)
+      post_url = Rails.application.routes.url_helpers.post_url(post, host: Rails.application.config.app_host)
+      result = publisher.publish(post.title, post.content.to_s, post_url)
       
       if result[:success]
         post.update!(
           bluesky_uri: result[:uri],
-          bluesky_cid: result[:cid],
-          bluesky_metadata: result[:metadata]
+          bluesky_cid: result[:cid]
         )
         
-        Rails.logger.info "Successfully published post #{post.id} to Bluesky"
+        Rails.logger.info "Successfully published post #{post.id} to Bluesky via DPoP: #{result[:uri]}"
       else
         post.update!(status: :failed)
-        Rails.logger.error "Failed to publish post #{post.id}: #{result[:error]}"
+        Rails.logger.error "Failed to publish post #{post.id} via DPoP: #{result[:error]}"
       end
       
     rescue => e
       post.update!(status: :failed)
-      Rails.logger.error "Error publishing post #{post.id}: #{e.message}"
+      Rails.logger.error "Error publishing post #{post.id} via DPoP: #{e.message}"
       raise e
     end
   end

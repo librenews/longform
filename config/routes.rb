@@ -8,6 +8,11 @@ Rails.application.routes.draw do
 
   # OAuth client metadata (dynamic)
   get "oauth/client-metadata.json", to: "oauth#client_metadata"
+  get "oauth/jwks.json", to: "oauth#jwks"
+  
+  # OAuth required pages
+  get "terms", to: "pages#terms"
+  get "privacy", to: "pages#privacy"
 
   # Root route
   root "home#index"

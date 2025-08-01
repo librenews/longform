@@ -8,7 +8,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true
   validates :provider, presence: true
   validates :uid, presence: true
-  validates :access_token, presence: true
+
   
   validates :uid, uniqueness: { scope: :provider }
   
@@ -23,8 +23,39 @@ class User < ApplicationRecord
     access_token.present? && !token_expired?
   end
   
+  # Alias for consistency (some code might use expires_at)
+  def expires_at
+    token_expires_at
+  end
+  
   def tokens_valid?
     valid_token?
+  end
+  
+  # Clear expired or invalid tokens
+  def clear_bluesky_tokens!
+    update!(
+      access_token: nil,
+      refresh_token: nil,
+      token_expires_at: nil
+    )
+  end
+
+  # DPoP key management for Bluesky OAuth
+  def dpop_private_key
+    # For now, reuse the same key pair as OmniAuth
+    # In production, you might want separate DPoP keys per user
+    OmniAuth::Atproto::KeyManager.current_private_key
+  end
+
+  def dpop_jwk
+    # Public key in JWK format for DPoP headers
+    OmniAuth::Atproto::KeyManager.current_jwk
+  end
+
+  # Check if user has valid Bluesky authentication
+  def has_valid_bluesky_token?
+    provider == 'atproto' && access_token.present? && !token_expired?
   end
   
   # Scopes for posts

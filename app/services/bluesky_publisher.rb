@@ -1,7 +1,4 @@
 class BlueskyPublisher
-  include HTTParty
-  base_uri 'https://bsky.social/xrpc'
-  
   def initialize(post)
     @post = post
     @user = post.user
@@ -13,7 +10,15 @@ class BlueskyPublisher
   end
   
   def publish
-    return { success: false, error: 'Invalid token' } unless @user.valid_token?
+    # Check if token is still valid, try to refresh if expired
+    unless @user.valid_token?
+      refresh_result = refresh_access_token
+      unless refresh_result[:success]
+        # Clear invalid tokens so user knows they need to re-authenticate
+        @user.clear_bluesky_tokens!
+        return { success: false, error: "Bluesky authentication has expired and could not be refreshed. Please sign in with Bluesky again.", requires_reauth: true }
+      end
+    end
     
     begin
       # Format content for AT Protocol
@@ -44,7 +49,8 @@ class BlueskyPublisher
       else
         {
           success: false,
-          error: response.body['message'] || 'Unknown error'
+          error: response.body['message'] || 'Unknown error',
+          details: response.body
         }
       end
       
@@ -57,6 +63,32 @@ class BlueskyPublisher
   end
   
   private
+  
+  def refresh_access_token
+    return { success: false, error: 'No refresh token available' } unless @user.refresh_token.present?
+    
+    begin
+      response = @connection.post('/xrpc/com.atproto.server.refreshSession') do |req|
+        req.headers['Authorization'] = "Bearer #{@user.refresh_token}"
+      end
+      
+      if response.success?
+        # Update user with new tokens
+        @user.update!(
+          access_token: response.body['accessJwt'],
+          refresh_token: response.body['refreshJwt'],
+          token_expires_at: Time.current + 2.hours # Standard AT Protocol token lifetime
+        )
+        
+        { success: true }
+      else
+        { success: false, error: response.body['message'] || 'Token refresh failed' }
+      end
+      
+    rescue => e
+      { success: false, error: e.message }
+    end
+  end
   
   def format_content
     # Convert HTML content to plain text with basic formatting

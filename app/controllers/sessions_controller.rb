@@ -14,6 +14,19 @@ class SessionsController < ApplicationController
       return
     end
     
+    # Debug: Log the full auth hash structure
+    Rails.logger.info "=== OAuth Debug Info ==="
+    Rails.logger.info "Provider: #{auth_hash.provider}"
+    Rails.logger.info "UID (DID): #{auth_hash.uid}"
+    Rails.logger.info "Credentials present: #{auth_hash.credentials.present?}"
+    if auth_hash.credentials.present?
+      Rails.logger.info "Access token present: #{auth_hash.credentials.token.present?}"
+      Rails.logger.info "Refresh token present: #{auth_hash.credentials.refresh_token.present?}"
+      Rails.logger.info "Expires at: #{auth_hash.credentials.expires_at}"
+      Rails.logger.info "Granted scopes: #{auth_hash.credentials.scope}"
+    end
+    Rails.logger.info "========================"
+    
     # Store session for User model to access
     Thread.current[:session] = session
     
