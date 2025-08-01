@@ -39,6 +39,12 @@ FactoryBot.define do
       bluesky_uri { "at://did:plc:#{SecureRandom.alphanumeric(22)}/com.whtwnd.blog.entry/#{SecureRandom.alphanumeric(13)}" }
     end
 
+    trait :published_locally do
+      status { :published }
+      published_at { rand(1.week.ago..Time.current) }
+      bluesky_uri { nil }
+    end
+
     trait :archived do
       status { :archived }
       published_at { rand(1.month.ago..1.week.ago) }

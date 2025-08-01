@@ -5,6 +5,12 @@ class PublishToBlueskyJob < ApplicationJob
     return unless post.published?
     return unless post.user.has_valid_bluesky_token?
     
+    # Prevent duplicate publishing - if post already has a bluesky_uri, it's already published
+    if post.bluesky_uri.present?
+      Rails.logger.info "Post #{post.id} already published to Bluesky: #{post.bluesky_uri}"
+      return
+    end
+    
     begin
       publisher = BlueskyDpopPublisher.new(post.user)
       post_url = Rails.application.routes.url_helpers.post_url(post, host: ENV['APP_HOST'])

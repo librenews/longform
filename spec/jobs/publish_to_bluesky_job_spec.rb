@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe PublishToBlueskyJob, type: :job do
   let(:user) { create(:user, handle: 'test.bsky.social', access_token: 'valid_token') }
-  let(:post) { create(:post, :published, user: user) }
+  let(:post) { create(:post, :published_locally, user: user) }
   let(:publisher_double) { instance_double(BlueskyDpopPublisher) }
 
   before do
@@ -12,17 +12,21 @@ RSpec.describe PublishToBlueskyJob, type: :job do
 
   describe '#perform' do
     before do
-      allow(BlueskyDpopPublisher).to receive(:new).with(post).and_return(publisher_double)
+      allow(BlueskyDpopPublisher).to receive(:new).with(post.user).and_return(publisher_double)
     end
 
     context 'when publishing succeeds' do
       before do
-        allow(publisher_double).to receive(:publish).and_return(true)
+        allow(publisher_double).to receive(:publish).and_return({
+          success: true, 
+          uri: "at://did:plc:test123/com.whtwnd.blog.entry/abc123",
+          cid: "bafytest123"
+        })
       end
 
       it 'creates a BlueskyDpopPublisher instance' do
         described_class.perform_now(post)
-        expect(BlueskyDpopPublisher).to have_received(:new).with(post)
+        expect(BlueskyDpopPublisher).to have_received(:new).with(post.user)
       end
 
       it 'calls publish on the publisher' do
@@ -38,7 +42,7 @@ RSpec.describe PublishToBlueskyJob, type: :job do
 
       it 'updates post status from failed to published' do
         failed_post = create(:post, :failed, user: user)
-        allow(BlueskyDpopPublisher).to receive(:new).with(failed_post).and_return(publisher_double)
+        allow(BlueskyDpopPublisher).to receive(:new).with(failed_post.user).and_return(publisher_double)
         
         expect {
           described_class.perform_now(failed_post)
@@ -46,9 +50,28 @@ RSpec.describe PublishToBlueskyJob, type: :job do
       end
     end
 
+    context 'when post already has bluesky_uri (duplicate prevention)' do
+      let(:already_published_post) { create(:post, :published, user: user) }
+
+      it 'skips publishing and returns early' do
+        expect(BlueskyDpopPublisher).not_to receive(:new)
+        described_class.perform_now(already_published_post)
+      end
+
+      it 'logs that post is already published' do
+        expect(Rails.logger).to receive(:info).with(
+          "Post #{already_published_post.id} already published to Bluesky: #{already_published_post.bluesky_uri}"
+        )
+        described_class.perform_now(already_published_post)
+      end
+    end
+
     context 'when publishing fails' do
       before do
-        allow(publisher_double).to receive(:publish).and_return(false)
+        allow(publisher_double).to receive(:publish).and_return({
+          success: false,
+          error: "Publishing failed"
+        })
       end
 
       it 'marks the post as failed' do
