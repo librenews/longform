@@ -1,18 +1,38 @@
 <% content_for :title, "New Post - Longform" %>
 
 <% content_for :header_content do %>
-  <!-- Editor Header -->
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-      <%= link_to posts_path, role: "button", class: "outline secondary", style: "margin: 0;" do %>
-        ← Back to Posts
+  <!-- Medium-style Editor Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem;">
+    <!-- Left: Brand and Status -->
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+      <%= link_to root_path, style: "text-decoration: none; color: inherit;" do %>
+        <%= app_brand %>
       <% end %>
-      <h2 style="margin: 0; font-weight: 500;">New Post</h2>
+      
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span class="save-status" style="color: var(--pico-muted-color); font-size: 0.875rem;">Draft</span>
+        <div style="width: 6px; height: 6px; background: var(--pico-secondary-color); border-radius: 50%;"></div>
+      </div>
     </div>
     
-    <div style="display: flex; align-items: center; gap: 1rem;">
-      <span class="save-status" style="color: var(--pico-muted-color); font-size: 0.875rem;">Draft</span>
-      <div style="width: 8px; height: 8px; background: var(--pico-secondary-color); border-radius: 50%;"></div>
+    <!-- Right: User Profile with Dropdown -->
+    <div style="position: relative;">
+      <details class="dropdown" style="margin: 0;">
+        <summary role="button" class="outline" style="width: 40px; height: 40px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; border: 2px solid var(--pico-muted-border-color);">
+          <% if current_user.avatar_url.present? %>
+            <%= image_tag current_user.avatar_url, style: "width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" %>
+          <% else %>
+            <!-- Default avatar icon -->
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          <% end %>
+        </summary>
+        <ul dir="rtl" style="min-width: 150px;">
+          <li><%= link_to "Posts", posts_path %></li>
+          <li><%= link_to "Sign Out", sign_out_path, data: { "turbo-method": :delete } %></li>
+        </ul>
+      </details>
     </div>
   </div>
 <% end %>
