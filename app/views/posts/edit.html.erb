@@ -1,4 +1,6 @@
-<% content_for :title, "Edit: #{@post.title} - Longform" %>
+<% content_for :title do %>
+  Edit: <%= (@post.title.presence || "Untitled Post") %> - <%= app_name %>
+<% end %>
 
 <% content_for :header_content do %>
   <!-- Medium-style Editor Header -->
@@ -35,9 +37,6 @@
           <li><%= link_to "Sign Out", sign_out_path, data: { "turbo-method": :delete } %></li>
         </ul>
       </details>
-    </div>
-  </div>
-<% end %>
     </div>
   </div>
 <% end %>
