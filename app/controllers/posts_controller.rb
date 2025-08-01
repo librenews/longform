@@ -35,7 +35,7 @@ class PostsController < ApplicationController
     
     if @post.save
       # Check if publish button was clicked
-      if params[:publish] == "true"
+      if params[:publish] == "Publish"
         if @post.publish!
           respond_to do |format|
             format.html { redirect_to @post, notice: 'Post published to Bluesky!' }
