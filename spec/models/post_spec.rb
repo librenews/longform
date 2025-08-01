@@ -96,6 +96,26 @@ RSpec.describe Post, type: :model do
     end
 
     describe '#unpublish!' do
+      before do
+        # Mock PDS resolution for the user's DID
+        pds_response = {
+          'service' => [
+            {
+              'id' => '#atproto_pds',
+              'type' => 'AtprotoPersonalDataServer',
+              'serviceEndpoint' => 'https://test.pds.host'
+            }
+          ]
+        }
+        
+        stub_request(:get, %r{https://plc\.directory/did:plc:.*})
+          .to_return(status: 200, body: pds_response.to_json, headers: { 'Content-Type' => 'application/json' })
+
+        # Mock successful record deletion
+        stub_request(:post, "https://test.pds.host/xrpc/com.atproto.repo.deleteRecord")
+          .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+      end
+      
       it 'changes status from published to draft' do
         expect { published_post.unpublish! }.to change { published_post.status }.from('published').to('draft')
       end

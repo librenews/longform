@@ -184,6 +184,92 @@ RSpec.describe BlueskyDpopPublisher, type: :service do
     end
   end
 
+  describe '#delete_record' do
+    let(:at_uri) { "at://#{user.uid}/com.whtwnd.blog.entry/abc123def456" }
+    
+    before do
+      # Mock PDS resolution for the user's DID
+      pds_response = {
+        'service' => [
+          {
+            'id' => '#atproto_pds',
+            'type' => 'AtprotoPersonalDataServer',
+            'serviceEndpoint' => 'https://test.pds.host'
+          }
+        ]
+      }
+      
+      stub_request(:get, "https://plc.directory/#{user.uid}")
+        .to_return(status: 200, body: pds_response.to_json, headers: { 'Content-Type' => 'application/json' })
+      
+      allow(service).to receive(:generate_dpop_token).and_return('dpop-token-123')
+    end
+
+    context 'when successful' do
+      before do
+        stub_request(:post, "https://test.pds.host/xrpc/com.atproto.repo.deleteRecord")
+          .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+      end
+
+      it 'deletes the record successfully' do
+        result = service.delete_record(at_uri)
+        expect(result).to be true
+      end
+
+      it 'makes the correct API call' do
+        service.delete_record(at_uri)
+        
+        expect(WebMock).to have_requested(:post, "https://test.pds.host/xrpc/com.atproto.repo.deleteRecord")
+          .with(
+            headers: {
+              'Content-Type' => 'application/json',
+              'Authorization' => 'DPoP valid_token',
+              'DPoP' => 'dpop-token-123'
+            },
+            body: {
+              repo: user.uid,
+              collection: 'com.whtwnd.blog.entry',
+              rkey: 'abc123def456'
+            }.to_json
+          )
+      end
+    end
+
+    context 'when deletion fails' do
+      before do
+        stub_request(:post, "https://test.pds.host/xrpc/com.atproto.repo.deleteRecord")
+          .to_return(status: 400, body: { error: 'InvalidRequest', message: 'Record not found' }.to_json, headers: { 'Content-Type' => 'application/json' })
+      end
+
+      it 'returns false and logs error' do
+        expect(Rails.logger).to receive(:error).with(/Failed to delete AT Protocol record/)
+        result = service.delete_record(at_uri)
+        expect(result).to be false
+      end
+    end
+
+    context 'with invalid AT URI' do
+      it 'returns false and logs error for malformed URI' do
+        expect(Rails.logger).to receive(:error).with(/Invalid AT URI format/)
+        result = service.delete_record('invalid-uri')
+        expect(result).to be false
+      end
+    end
+
+    context 'when network error occurs' do
+      before do
+        stub_request(:post, "https://test.pds.host/xrpc/com.atproto.repo.deleteRecord")
+          .to_raise(Faraday::ConnectionFailed.new('Connection failed'))
+      end
+
+      it 'returns false and logs error' do
+        expect(Rails.logger).to receive(:error).with(/Failed to delete AT Protocol record/)
+        result = service.delete_record(at_uri)
+        expect(result).to be false
+      end
+    end
+  end
+
   describe 'private methods' do
     describe '#resolve_pds_endpoint' do
       context 'with valid DID' do

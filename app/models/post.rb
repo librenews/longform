@@ -63,6 +63,18 @@ class Post < ApplicationRecord
   def unpublish!
     return false unless published?
     
+    # Delete from Bluesky if it was published there
+    if bluesky_uri.present?
+      begin
+        publisher = BlueskyDpopPublisher.new(user)
+        publisher.delete_record(bluesky_uri)
+        Rails.logger.info "Successfully deleted Bluesky record for post #{id}: #{bluesky_uri}"
+      rescue => e
+        Rails.logger.error "Failed to delete Bluesky record for post #{id}: #{e.message}"
+        # Continue with unpublishing even if Bluesky deletion fails
+      end
+    end
+    
     update!(
       status: :draft,
       published_at: nil,
