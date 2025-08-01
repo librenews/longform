@@ -30,7 +30,7 @@ class Post < ApplicationRecord
   end
   
   def can_publish?
-    draft? && content.present? && title.present?
+    (draft? || failed?) && content.present? && title.present?
   end
   
   def word_count
@@ -91,7 +91,7 @@ class Post < ApplicationRecord
     if bluesky_uri.match(/at:\/\/(.+)\/app\.bsky\.feed\.post\/(.+)/)
       did = $1
       post_id = $2
-      "https://bsky.app/profile/#{user.bluesky_handle}/post/#{post_id}"
+      "https://bsky.app/profile/#{user.handle}/post/#{post_id}"
     end
   end
   

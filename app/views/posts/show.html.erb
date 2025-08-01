@@ -35,7 +35,7 @@
       <%= link_to "← Back to Posts", posts_path, role: "button", class: "outline" %>
       <%= link_to "Edit", edit_post_path(@post), role: "button", class: "outline" %>
       
-      <% if @post.draft? %>
+      <% if @post.draft? || @post.status == 'failed' %>
         <%= link_to "Publish", publish_post_path(@post), 
             role: "button", 
             data: { 
@@ -68,11 +68,6 @@
               turbo_confirm: "Are you sure you want to archive this post?" 
             } %>
       <% end %>
-      
-            <% end %>
-      
-    </div>
-  </header>
       
       <%= link_to "Delete", post_path(@post), 
           role: "button", class: "outline", 

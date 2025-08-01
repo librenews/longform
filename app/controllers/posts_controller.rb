@@ -34,9 +34,24 @@ class PostsController < ApplicationController
     @post = current_user.posts.build(post_params)
     
     if @post.save
-      respond_to do |format|
-        format.html { redirect_to edit_post_path(@post), notice: 'Post created successfully.' }
-        format.json { render json: { status: 'success', redirect_url: edit_post_path(@post) } }
+      # Check if publish button was clicked
+      if params[:publish] == "true"
+        if @post.publish!
+          respond_to do |format|
+            format.html { redirect_to @post, notice: 'Post published to Bluesky!' }
+            format.json { render json: { status: 'success', redirect_url: post_path(@post) } }
+          end
+        else
+          respond_to do |format|
+            format.html { redirect_to @post, alert: 'Post created but failed to publish. You can try publishing again from the post page.' }
+            format.json { render json: { status: 'error', message: 'Failed to publish' } }
+          end
+        end
+      else
+        respond_to do |format|
+          format.html { redirect_to edit_post_path(@post), notice: 'Post created successfully.' }
+          format.json { render json: { status: 'success', redirect_url: edit_post_path(@post) } }
+        end
       end
     else
       respond_to do |format|

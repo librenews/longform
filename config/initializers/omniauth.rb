@@ -1,8 +1,10 @@
 require_relative '../../lib/omniauth/atproto/key_manager'
 
 Rails.application.config.middleware.use OmniAuth::Builder do
+  app_url = Rails.application.config.respond_to?(:app_url) ? Rails.application.config.app_url : "http://localhost:3000"
+  
   provider(:atproto,
-    "#{Rails.application.config.app_url}/oauth/client-metadata.json",
+    "#{app_url}/oauth/client-metadata.json",
     nil,
     client_options: {
         site: "https://bsky.social",

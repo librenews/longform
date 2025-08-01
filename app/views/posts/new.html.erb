@@ -60,7 +60,8 @@
         <%= form.submit "Save Draft", class: "outline" %>
         <%= form.submit "Publish", 
             data: { confirm: "Ready to publish this post to Bluesky?" },
-            formaction: (@post.persisted? ? publish_post_path(@post) : nil) %>
+            name: "publish",
+            value: "true" %>
       </div>
     </div>
     

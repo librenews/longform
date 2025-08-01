@@ -35,6 +35,13 @@ Rails.application.routes.draw do
     end
   end
 
+  # Records browser for AT Protocol inspection
+  resources :records, only: [:index, :show] do
+    collection do
+      get 'collection/:collection_name', to: 'records#collection', as: 'collection', constraints: { collection_name: /[^\/]+/ }
+    end
+  end
+
   # Health check for self-hosting
   get "/health", to: "application#health"
 end

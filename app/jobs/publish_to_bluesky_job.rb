@@ -7,7 +7,7 @@ class PublishToBlueskyJob < ApplicationJob
     
     begin
       publisher = BlueskyDpopPublisher.new(post.user)
-      post_url = Rails.application.routes.url_helpers.post_url(post, host: Rails.application.config.app_host)
+      post_url = Rails.application.routes.url_helpers.post_url(post, host: ENV['APP_HOST'])
       result = publisher.publish(post.title, post.content.to_s, post_url)
       
       if result[:success]

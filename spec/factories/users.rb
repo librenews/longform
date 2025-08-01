@@ -6,8 +6,8 @@ FactoryBot.define do
     avatar_url { Faker::Avatar.image }
     
     # OAuth data that would come from Bluesky
-    provider { "bluesky" }
-    uid { SecureRandom.uuid }
+    provider { "atproto" }
+    uid { "did:plc:#{SecureRandom.alphanumeric(22)}" }
     access_token { SecureRandom.hex(32) }
     refresh_token { SecureRandom.hex(32) }
     

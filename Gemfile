@@ -40,6 +40,9 @@ gem "faraday-retry"
 # JWT for DPoP token generation
 gem "jwt"
 
+# HTML to Markdown conversion for blog entries
+gem "reverse_markdown"
+
 # Pagination
 gem "kaminari"
 

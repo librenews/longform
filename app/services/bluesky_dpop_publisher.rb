@@ -10,21 +10,18 @@ class BlueskyDpopPublisher
     return { success: false, error: "User not authenticated with Bluesky" } unless @user.has_valid_bluesky_token?
 
     begin
-      # Format the post content
-      post_text = format_content(title, content, post_url)
-      
-      # Create the post using PDS endpoint (com.atproto.repo.createRecord)
-      result = create_post_record(post_text)
+      # Create the blog entry using Whitewind lexicon for longform content
+      result = create_blog_entry(title, content, post_url)
       
       if result[:success]
-        Rails.logger.info "Successfully published to Bluesky with DPoP: #{result[:uri]}"
+        Rails.logger.info "Successfully published blog entry to Bluesky with DPoP: #{result[:uri]}"
         { success: true, uri: result[:uri], cid: result[:cid] }
       else
-        Rails.logger.error "Bluesky DPoP publish failed: #{result[:error]}"
+        Rails.logger.error "Bluesky DPoP blog entry publish failed: #{result[:error]}"
         { success: false, error: result[:error] }
       end
     rescue => e
-      Rails.logger.error "Bluesky DPoP publish error: #{e.message}"
+      Rails.logger.error "Bluesky DPoP blog entry publish error: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
       { success: false, error: e.message }
     end
@@ -32,12 +29,12 @@ class BlueskyDpopPublisher
 
   private
 
-  def create_post_record(text)
-    # Use PDS endpoint for creating records (com.atproto.repo.createRecord)
+  def create_blog_entry(title, content, post_url)
+    # Use PDS endpoint for creating records with Whitewind blog lexicon
     url = "#{pds_endpoint}/xrpc/com.atproto.repo.createRecord"
     
     # Try the request, handling nonce requirement
-    response = make_dpop_request(url, text)
+    response = make_dpop_request(url, title, content, post_url)
     
     # If we get a nonce requirement error, retry with the nonce
     if (response.status == 401 || response.status == 400) && 
@@ -45,7 +42,7 @@ class BlueskyDpopPublisher
       Rails.logger.info "DPoP nonce required, retrying with nonce"
       @dpop_nonce = response.headers['DPoP-Nonce']
       Rails.logger.info "Extracted nonce: #{@dpop_nonce}"
-      response = make_dpop_request(url, text)
+      response = make_dpop_request(url, title, content, post_url)
     end
 
     Rails.logger.info "Bluesky DPoP API Response: #{response.status} - #{response.body}"
@@ -59,9 +56,28 @@ class BlueskyDpopPublisher
     end
   end
 
-  def make_dpop_request(url, text)
+  def make_dpop_request(url, title, content, post_url)
     # Generate DPoP token for this request (will include nonce if we have one)
     dpop_token = generate_dpop_token('POST', url)
+    
+    # Prepare content - convert HTML to markdown for better blog compatibility
+    markdown_content = convert_to_markdown(content)
+    
+    # Build the blog entry record according to Whitewind lexicon
+    blog_record = {
+      '$type': 'com.whtwnd.blog.entry',
+      content: markdown_content,
+      createdAt: Time.current.iso8601,
+      visibility: 'public'
+    }
+    
+    # Add title if present
+    blog_record[:title] = title if title.present?
+    
+    # Add URL as a reference/link in the content if provided
+    if post_url.present?
+      blog_record[:content] += "\n\n---\n*Originally published at: #{post_url}*"
+    end
     
     Faraday.post(url) do |req|
       req.headers['Content-Type'] = 'application/json'
@@ -69,12 +85,8 @@ class BlueskyDpopPublisher
       req.headers['DPoP'] = dpop_token
       req.body = {
         repo: @user.uid, # This is the user's DID
-        collection: 'app.bsky.feed.post',
-        record: {
-          '$type': 'app.bsky.feed.post',
-          text: text,
-          createdAt: Time.current.iso8601
-        }
+        collection: 'com.whtwnd.blog.entry', # Use Whitewind blog collection
+        record: blog_record
       }.to_json
     end
   end
@@ -103,6 +115,14 @@ class BlueskyDpopPublisher
   rescue => e
     Rails.logger.error "Error generating DPoP token: #{e.message}"
     raise e
+  end
+
+  def convert_to_markdown(html_content)
+    # Use reverse_markdown for professional HTML to Markdown conversion
+    require 'reverse_markdown'
+    
+    # Convert HTML to markdown with simple options
+    ReverseMarkdown.convert(html_content, unknown_tags: :bypass, github_flavored: true)
   end
 
   def access_token_hash
@@ -145,32 +165,5 @@ class BlueskyDpopPublisher
   rescue => e
     Rails.logger.error "Error resolving PDS endpoint: #{e.message}"
     'https://bsky.social'
-  end
-
-  def format_content(title, content, url)
-    # Strip HTML tags from content and truncate
-    plain_content = ActionView::Base.full_sanitizer.sanitize(content)
-    
-    # Build the post text
-    post_parts = []
-    post_parts << title if title.present?
-    
-    # Add content preview (truncated to fit within character limits)
-    if plain_content.present?
-      preview = plain_content.strip
-      # Reserve space for title, URL, and formatting
-      available_chars = 280 - (title&.length || 0) - (url&.length || 0) - 10 # buffer for formatting
-      
-      if preview.length > available_chars
-        preview = preview[0...available_chars].gsub(/\s+\S*$/, '') + '...'
-      end
-      
-      post_parts << preview
-    end
-    
-    # Add the URL
-    post_parts << url if url.present?
-    
-    post_parts.join("\n\n")
   end
 end

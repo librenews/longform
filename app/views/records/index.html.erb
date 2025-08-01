@@ -1,0 +1,83 @@
+<% content_for :title, "AT Protocol Records Browser" %>
+
+<main class="container">
+  <header style="margin-bottom: 2rem;">
+    <h1>AT Protocol Records Browser</h1>
+    <p>Browse and inspect records from your Personal Data Server (PDS)</p>
+  </header>
+
+  <% if @error %>
+    <div role="alert" style="margin-bottom: 2rem;">
+      <strong>Error:</strong> <%= @error %>
+      <p>Make sure you're authenticated with AT Protocol and have proper permissions.</p>
+    </div>
+  <% else %>
+    
+    <% if @collections.any? %>
+      <section style="margin-bottom: 3rem;">
+        <h2>Available Collections</h2>
+        <p>Click on a collection to browse its records:</p>
+        
+        <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
+          <% @collections.each do |collection| %>
+            <article style="padding: 1.5rem; border: 1px solid var(--pico-muted-border-color); border-radius: 0.5rem;">
+              <header style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 0.5rem;">
+                  <%= link_to collection_records_path(collection_name: collection['name']), 
+                      style: "text-decoration: none; color: var(--pico-primary-color);" do %>
+                    <code><%= collection['name'] %></code>
+                  <% end %>
+                </h3>
+                <small style="color: var(--pico-muted-color);">
+                  <%= pluralize(collection['count'] || 0, 'record') %>
+                </small>
+              </header>
+              
+              <div style="margin-bottom: 1rem;">
+                <% case collection['name'] %>
+                <% when 'com.whtwnd.blog.entry' %>
+                  <p><strong>Whitewind Blog Entries</strong> - Longform blog posts with rich content support</p>
+                <% when 'app.bsky.feed.post' %>
+                  <p><strong>Bluesky Posts</strong> - Standard social media posts (300 character limit)</p>
+                <% when 'app.bsky.actor.profile' %>
+                  <p><strong>Profile Information</strong> - User profile data and preferences</p>
+                <% when 'app.bsky.feed.like' %>
+                  <p><strong>Likes</strong> - Posts you've liked on Bluesky</p>
+                <% when 'app.bsky.graph.follow' %>
+                  <p><strong>Follows</strong> - Accounts you're following</p>
+                <% else %>
+                  <p><em>Collection: <%= collection['name'] %></em></p>
+                <% end %>
+              </div>
+              
+              <%= link_to "Browse Records", collection_records_path(collection_name: collection['name']), 
+                  role: "button", class: "outline" %>
+            </article>
+          <% end %>
+        </div>
+      </section>
+
+    <% else %>
+      <div role="alert">
+        <strong>No collections found</strong>
+        <p>No AT Protocol collections were found in your PDS. Try publishing some content first.</p>
+      </div>
+    <% end %>
+
+    <!-- Quick Actions -->
+    <section style="background: var(--pico-card-background-color); padding: 2rem; border-radius: 0.5rem;">
+      <h3>Quick Access</h3>
+      <p>Jump directly to commonly used collections:</p>
+      
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+        <%= link_to "Blog Entries", collection_records_path(collection_name: "com.whtwnd.blog.entry"), 
+            role: "button", class: "secondary" %>
+        <%= link_to "Bluesky Posts", collection_records_path(collection_name: "app.bsky.feed.post"), 
+            role: "button", class: "secondary" %>
+        <%= link_to "Profile", collection_records_path(collection_name: "app.bsky.actor.profile"), 
+            role: "button", class: "secondary" %>
+      </div>
+    </section>
+
+  <% end %>
+</main>

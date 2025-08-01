@@ -1,0 +1,142 @@
+<% content_for :title, "#{@collection_name} Records" %>
+
+<main class="container">
+  <header style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1>Collection: <code><%= @collection_name %></code></h1>
+        <p>Browse records in this collection</p>
+      </div>
+      <%= link_to "← Back to Records Browser", records_path, role: "button", class: "outline" %>
+    </div>
+  </header>
+
+  <% if @records_result[:success] %>
+    <% if @records_result[:records].any? %>
+      <div style="margin-bottom: 2rem;">
+        <p><strong><%= pluralize(@records_result[:records].length, 'record') %></strong> found in <code><%= @collection_name %></code></p>
+        <% if @records_result[:cursor] %>
+          <small style="color: var(--pico-muted-color);">
+            Cursor: <code><%= @records_result[:cursor] %></code>
+          </small>
+        <% end %>
+      </div>
+
+      <% @records_result[:records].each_with_index do |record, index| %>
+        <article style="margin-bottom: 2rem;">
+          <header>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+              <div>
+                <h2 style="margin-bottom: 0.5rem;">Record #<%= index + 1 %></h2>
+                <div style="font-size: 0.875rem; color: var(--pico-muted-color);">
+                  <div><strong>URI:</strong> <code><%= record['uri'] %></code></div>
+                  <div><strong>CID:</strong> <code><%= record['cid'] %></code></div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <% if record['value'] %>
+            <!-- Formatted Record Display -->
+            <div style="background: var(--pico-card-background-color); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+              <div style="margin-bottom: 1rem;">
+                <strong>Record Type:</strong> 
+                <code style="background: var(--pico-primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                  <%= record['value']['$type'] %>
+                </code>
+              </div>
+
+              <% if record['value']['$type'] == 'com.whtwnd.blog.entry' %>
+                <!-- Blog Entry Display -->
+                <% if record['value']['title'] %>
+                  <div style="margin-bottom: 1rem;">
+                    <h3 style="color: var(--pico-primary-color); margin-bottom: 0.5rem;"><%= record['value']['title'] %></h3>
+                  </div>
+                <% end %>
+
+                <div class="grid" style="margin-bottom: 1rem;">
+                  <div>
+                    <strong>Created:</strong><br>
+                    <% if record['value']['createdAt'] %>
+                      <%= Time.parse(record['value']['createdAt']).strftime("%B %d, %Y at %H:%M:%S UTC") %>
+                    <% else %>
+                      <em>Not specified</em>
+                    <% end %>
+                  </div>
+                  <div>
+                    <strong>Visibility:</strong><br>
+                    <code><%= record['value']['visibility'] || 'public' %></code>
+                  </div>
+                </div>
+
+                <% if record['value']['content'] %>
+                  <div style="margin-bottom: 1rem;">
+                    <strong>Content:</strong>
+                    <div style="background: var(--pico-code-background-color); padding: 1rem; border-radius: 0.25rem; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 0.875rem; line-height: 1.4;">
+<%= record['value']['content'] %></div>
+                  </div>
+                <% end %>
+
+                <% if record['value']['subtitle'] %>
+                  <div style="margin-bottom: 1rem;">
+                    <strong>Subtitle:</strong> <%= record['value']['subtitle'] %>
+                  </div>
+                <% end %>
+
+              <% elsif record['value']['$type'] == 'app.bsky.feed.post' %>
+                <!-- Standard Bluesky Post Display -->
+                <% if record['value']['text'] %>
+                  <div style="margin-bottom: 1rem;">
+                    <strong>Post Text:</strong>
+                    <div style="background: var(--pico-code-background-color); padding: 1rem; border-radius: 0.25rem;">
+                      <%= record['value']['text'] %>
+                    </div>
+                  </div>
+                <% end %>
+
+                <% if record['value']['createdAt'] %>
+                  <div style="margin-bottom: 1rem;">
+                    <strong>Posted:</strong> <%= Time.parse(record['value']['createdAt']).strftime("%B %d, %Y at %H:%M:%S UTC") %>
+                  </div>
+                <% end %>
+
+              <% else %>
+                <!-- Generic Record Display -->
+                <div style="margin-bottom: 1rem;">
+                  <em>Record type <code><%= record['value']['$type'] %></code> - showing raw data:</em>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Raw JSON Data -->
+            <details>
+              <summary style="cursor: pointer; color: var(--pico-primary-color);">
+                <strong>View Raw JSON Data</strong>
+              </summary>
+              <div style="background: var(--pico-code-background-color); padding: 1rem; border-radius: 0.25rem; margin-top: 1rem;">
+                <pre style="margin: 0; font-size: 0.75rem; white-space: pre-wrap; max-height: 500px; overflow-y: auto;"><%= JSON.pretty_generate(record) %></pre>
+              </div>
+            </details>
+
+          <% else %>
+            <div role="alert">
+              <strong>No record data available</strong>
+            </div>
+          <% end %>
+        </article>
+      <% end %>
+
+    <% else %>
+      <div role="alert">
+        <strong>No records found</strong> in collection <code><%= @collection_name %></code>
+        <p>This collection exists but contains no records yet.</p>
+      </div>
+    <% end %>
+
+  <% else %>
+    <div role="alert">
+      <strong>Error loading records:</strong> <%= @records_result[:error] %>
+      <p>Make sure you're authenticated and have permission to access this collection.</p>
+    </div>
+  <% end %>
+</main>

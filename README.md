@@ -1,40 +1,38 @@
 # Longform
 
-A beautiful, minimalist blogging platform for creating and managing longform content with **full Bluesky publishing integration**.
+A professional blogging platform for creating and publishing longform content with **complete AT Protocol integration** and **Whitewind blog lexicon support**.
 
 ## 🌟 Features
 
-### Core Functionality
-- **Rich Text Editor** - Write with Trix editor featuring auto-save functionality
-- **Post Management** - Complete CRUD operations for your content
-- **Status Management** - Draft, Published, Archived, and Failed states
-- **Search & Filtering** - Find content quickly with status-based filtering and search
-- **Word Count & Reading Time** - Automatic content analysis and metadata
+### AT Protocol Integration ✨
+- **OAuth 2.0 Authentication** - Secure login with any AT Protocol account (Bluesky, etc.)
+- **DPoP Authentication** - Advanced security with Demonstrating Proof of Possession tokens
+- **Whitewind Blog Lexicon** - Publish full longform content using `com.whtwnd.blog.entry` (up to 100,000 characters)
+- **PDS Endpoint Discovery** - Automatic resolution of Personal Data Servers
+- **Records Browser** - Inspect all AT Protocol records in your PDS with collection filtering
+- **One-Click Publishing** - Seamless publishing to the AT Protocol network
+- **Automatic Retry Logic** - Robust error handling for failed publications
 
-### Bluesky Integration ✨
-- **OAuth 2.0 Authentication** - Secure login with your Bluesky account
-- **DPoP Authentication** - Advanced security with Demonstrating Proof of Possession
-- **One-Click Publishing** - Publish posts directly to Bluesky with a single click
-- **PDS Endpoint Discovery** - Automatic resolution of your Personal Data Server
-- **AT Protocol Compliance** - Full support for the AT Protocol specification
+### Content Management
+- **Rich Text Editor** - Trix editor with auto-save and extensive formatting options
+- **Advanced Post States** - Draft, Published, Failed, and Archived status management  
+- **HTML to Markdown** - Professional conversion for AT Protocol blog entries
+- **Word Count & Reading Time** - Real-time content analysis and metadata
+- **Search & Filtering** - Multi-criteria search with status-based filtering
+- **Bulk Operations** - Efficient management of multiple posts
 
-### Content Organization
-- **Draft System** - Save and iterate on unpublished content
-- **Publishing Workflow** - Seamless draft-to-published transitions with Bluesky sync
-- **Archive System** - Hide posts without permanent deletion
-- **Bulk Operations** - Manage multiple posts efficiently
+### Developer Experience
+- **Background Job Processing** - Asynchronous publishing with ActiveJob
+- **Comprehensive Error Handling** - Detailed logging and graceful failure recovery
+- **Environment-Specific Configuration** - Separate keys and settings per environment
+- **AT Protocol Records Inspection** - Full PDS data browsing and debugging tools
+- **Professional Security** - Cryptographic key management and rotation
 
-### Authentication & Security
-- **AT Protocol OAuth** - Industry-standard authentication with enhanced security
-- **DPoP Token Management** - Cryptographic proof of key possession
-- **Avatar Fetching** - Automatic profile integration from Bluesky
-- **Secure Key Management** - Environment-specific cryptographic keys
-
-### User Experience
-- **Responsive Design** - Clean, mobile-friendly interface with PicoCSS
-- **Real-time Feedback** - Instant save confirmations and status updates
-- **Confirmation Dialogs** - Safe operations with user confirmation prompts
-- **Semantic Styling** - Beautiful, accessible interface design
+### User Interface
+- **Responsive Design** - Clean, accessible interface with PicoCSS framework
+- **Real-time Feedback** - Instant status updates and confirmation dialogs
+- **Progressive Web App** - PWA-ready with manifest and service worker
+- **Professional Typography** - Optimized reading experience for longform content
 
 ## 🚀 Quick Start
 
@@ -144,6 +142,25 @@ Longform implements a complete AT Protocol OAuth flow with advanced security fea
 3. **Token Exchange** - DPoP-bound access token acquisition
 4. **API Requests** - Authenticated calls to user's PDS with DPoP proofs
 
+### Whitewind Blog Lexicon
+Longform uses the Whitewind blog lexicon (`com.whtwnd.blog.entry`) for publishing longform content:
+
+```json
+{
+  "$type": "com.whtwnd.blog.entry",
+  "content": "Full markdown content (up to 100,000 characters)",
+  "title": "Blog post title",
+  "createdAt": "2025-08-01T12:00:00.000Z",
+  "visibility": "public"
+}
+```
+
+**Advantages over standard Bluesky posts:**
+- **100,000 character limit** vs 300 for standard posts
+- **Markdown support** for rich formatting
+- **Blog-specific metadata** (title, subtitle, visibility)
+- **Better discoverability** in blog-aware AT Protocol applications
+
 ## 📊 Post Status System
 
 Longform uses a comprehensive status system for content management:
@@ -162,7 +179,35 @@ Longform uses a comprehensive status system for content management:
 5. **Archive** - Hide posts without permanent deletion
 6. **Search** - Find content using the built-in search and filters
 
-## 🔧 Configuration
+## � AT Protocol Records Browser
+
+Longform includes a powerful AT Protocol records browser for debugging and exploring your PDS data:
+
+**Access the browser at `/records`**
+
+### Features:
+- **All Collections View** - Browse all record types in your PDS
+- **Collection Filtering** - Focus on specific collections (e.g. `com.whtwnd.blog.entry`)
+- **Individual Record Inspection** - View complete record data with formatted JSON
+- **Real-time Synchronization** - See newly published records immediately
+- **DPoP Authentication** - Secure access using your authenticated session
+
+### Supported Collections:
+- `com.whtwnd.blog.entry` - Blog posts (Whitewind lexicon)
+- `app.bsky.feed.post` - Bluesky posts
+- `app.bsky.actor.profile` - Profile information
+- `app.bsky.feed.like` - Likes and reactions
+- `app.bsky.feed.repost` - Reposts and shares
+- `app.bsky.graph.follow` - Follow relationships
+- And all other AT Protocol collections in your PDS
+
+This tool is invaluable for:
+- **Debugging publishing issues** - Verify records were created correctly
+- **Understanding AT Protocol data** - See how records are structured
+- **Development and testing** - Inspect data during development
+- **Content verification** - Confirm blog posts published successfully
+
+## �🔧 Configuration
 
 Essential environment variables for development and production:
 

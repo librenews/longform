@@ -30,13 +30,13 @@ FactoryBot.define do
     trait :draft do
       status { :draft }
       published_at { nil }
-      bluesky_url { nil }
+      bluesky_uri { nil }
     end
 
     trait :published do
       status { :published }
       published_at { rand(1.week.ago..Time.current) }
-      bluesky_url { "https://bsky.app/profile/#{user.handle}/post/#{SecureRandom.alphanumeric(13)}" }
+      bluesky_uri { "at://did:plc:#{SecureRandom.alphanumeric(22)}/com.whtwnd.blog.entry/#{SecureRandom.alphanumeric(13)}" }
     end
 
     trait :archived do
@@ -47,7 +47,7 @@ FactoryBot.define do
     trait :failed do
       status { :failed }
       published_at { nil }
-      bluesky_url { nil }
+      bluesky_uri { nil }
     end
 
     trait :short do

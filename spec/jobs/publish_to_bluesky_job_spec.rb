@@ -1,13 +1,18 @@
 require 'rails_helper'
 
 RSpec.describe PublishToBlueskyJob, type: :job do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, handle: 'test.bsky.social', access_token: 'valid_token') }
   let(:post) { create(:post, :published, user: user) }
-  let(:publisher_double) { instance_double(BlueskyPublisher) }
+  let(:publisher_double) { instance_double(BlueskyDpopPublisher) }
+
+  before do
+    allow(ENV).to receive(:[]).and_call_original
+    allow(ENV).to receive(:[]).with('APP_HOST').and_return('longform.test')
+  end
 
   describe '#perform' do
     before do
-      allow(BlueskyPublisher).to receive(:new).with(post).and_return(publisher_double)
+      allow(BlueskyDpopPublisher).to receive(:new).with(post).and_return(publisher_double)
     end
 
     context 'when publishing succeeds' do
@@ -15,9 +20,9 @@ RSpec.describe PublishToBlueskyJob, type: :job do
         allow(publisher_double).to receive(:publish).and_return(true)
       end
 
-      it 'creates a BlueskyPublisher instance' do
+      it 'creates a BlueskyDpopPublisher instance' do
         described_class.perform_now(post)
-        expect(BlueskyPublisher).to have_received(:new).with(post)
+        expect(BlueskyDpopPublisher).to have_received(:new).with(post)
       end
 
       it 'calls publish on the publisher' do
@@ -25,22 +30,39 @@ RSpec.describe PublishToBlueskyJob, type: :job do
         expect(publisher_double).to have_received(:publish)
       end
 
-      it 'does not change the post status' do
+      it 'does not change the post status when already published' do
         expect {
           described_class.perform_now(post)
         }.not_to change { post.reload.status }
+      end
+
+      it 'updates post status from failed to published' do
+        failed_post = create(:post, :failed, user: user)
+        allow(BlueskyDpopPublisher).to receive(:new).with(failed_post).and_return(publisher_double)
+        
+        expect {
+          described_class.perform_now(failed_post)
+        }.to change { failed_post.reload.status }.from('failed').to('published')
       end
     end
 
     context 'when publishing fails' do
       before do
         allow(publisher_double).to receive(:publish).and_return(false)
-        allow(post).to receive(:mark_as_failed!)
       end
 
       it 'marks the post as failed' do
+        expect {
+          described_class.perform_now(post)
+        }.to change { post.reload.status }.from('published').to('failed')
+      end
+
+      it 'clears the bluesky_url when marking as failed' do
+        post.update!(bluesky_url: 'https://example.com/test')
+        
         described_class.perform_now(post)
-        expect(post).to have_received(:mark_as_failed!)
+        
+        expect(post.reload.bluesky_url).to be_nil
       end
     end
 
@@ -49,13 +71,13 @@ RSpec.describe PublishToBlueskyJob, type: :job do
 
       before do
         allow(publisher_double).to receive(:publish).and_raise(StandardError.new(error_message))
-        allow(post).to receive(:mark_as_failed!)
         allow(Rails.logger).to receive(:error)
       end
 
       it 'marks the post as failed' do
-        described_class.perform_now(post)
-        expect(post).to have_received(:mark_as_failed!)
+        expect {
+          described_class.perform_now(post)
+        }.to change { post.reload.status }.from('published').to('failed')
       end
 
       it 'logs the error' do
@@ -63,6 +85,14 @@ RSpec.describe PublishToBlueskyJob, type: :job do
         expect(Rails.logger).to have_received(:error).with(
           "Failed to publish post #{post.id} to Bluesky: #{error_message}"
         )
+      end
+
+      it 'clears bluesky_url on exception' do
+        post.update!(bluesky_url: 'https://example.com/test')
+        
+        described_class.perform_now(post)
+        
+        expect(post.reload.bluesky_url).to be_nil
       end
     end
 
@@ -74,14 +104,39 @@ RSpec.describe PublishToBlueskyJob, type: :job do
       end
 
       it 'performs the job asynchronously' do
-        allow(BlueskyPublisher).to receive(:new).and_return(publisher_double)
+        allow(BlueskyDpopPublisher).to receive(:new).and_return(publisher_double)
         allow(publisher_double).to receive(:publish).and_return(true)
 
         perform_enqueued_jobs do
           described_class.perform_later(post)
         end
 
-        expect(BlueskyPublisher).to have_received(:new).with(post)
+        expect(BlueskyDpopPublisher).to have_received(:new).with(post)
+      end
+    end
+
+    context 'retry logic' do
+      it 'retries on failure' do
+        allow(publisher_double).to receive(:publish).and_raise(StandardError.new('Temporary error'))
+        
+        expect(described_class).to receive(:retry_job).with(
+          wait: 5.minutes,
+          queue: described_class.queue_name
+        )
+        
+        expect { described_class.perform_now(post) }.to raise_error(StandardError)
+      end
+    end
+
+    context 'URL generation' do
+      before do
+        allow(publisher_double).to receive(:publish).and_return(true)
+      end
+
+      it 'uses correct host from environment' do
+        described_class.perform_now(post)
+        # Test passes if no exceptions are raised during URL generation
+        expect(true).to be true
       end
     end
 

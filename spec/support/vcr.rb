@@ -14,6 +14,11 @@ VCR.configure do |config|
   # Allow localhost connections for test server
   config.ignore_localhost = true
   
+  # Ignore test domains used in WebMock
+  config.ignore_request do |request|
+    URI(request.uri).host.in?(['test.pds.host', 'plc.directory', 'bsky.social'])
+  end
+  
   # Default cassette options
   config.default_cassette_options = {
     record: :once,
