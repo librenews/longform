@@ -1,6 +1,9 @@
 class PostsController < ApplicationController
   before_action :set_post, only: [:show, :edit, :update, :destroy, :publish, :unpublish, :archive, :unarchive]
   
+  # Use editor layout for new and edit actions
+  layout 'editor', only: [:new, :edit]
+  
   def index
     @posts = current_user.posts
                          .includes(:rich_text_content)

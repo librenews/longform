@@ -1,0 +1,57 @@
+<%= form_with model: post, local: true, data: { 
+      controller: "editor",
+      editor_save_url_value: post.persisted? ? post_path(post) : posts_path
+    } do |form| %>
+    
+    <!-- Title -->
+    <div style="margin-bottom: 3rem;">
+      <%= form.text_field :title, 
+          placeholder: "Post title...", 
+          style: "font-size: 2.5rem; font-weight: 600; border: none; outline: none; width: 100%; background: transparent; padding: 0; font-family: 'Inter', sans-serif;",
+          data: { 
+            action: "input->editor#autoSave",
+            target: "editor.title"
+          } %>
+    </div>
+    
+    <!-- Rich Text Editor -->
+    <div style="margin-bottom: 3rem;">
+      <%= form.rich_text_area :content,
+          placeholder: post.persisted? ? "Continue writing your longform post..." : "Start writing your longform post...",
+          style: "min-height: 60vh; font-size: 1.125rem; line-height: 1.7; border: none;",
+          data: {
+            target: "editor.content",
+            action: "trix-change->editor#trixChange"
+          } %>
+    </div>
+    
+    <!-- Actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid var(--pico-muted-border-color);">
+      <div class="writing-stats" style="font-size: 0.875rem; color: var(--pico-muted-color);">
+        <span>Words: <strong id="word-count"><%= post.persisted? ? post.word_count : 0 %></strong></span>
+        <span style="margin-left: 1rem;">Reading time: <strong id="reading-time"><%= post.persisted? ? post.reading_time_minutes : 0 %> min</strong></span>
+      </div>
+      
+      <div style="display: flex; gap: 1rem;">
+        <!-- Save as Draft -->
+        <%= form.submit "Save Draft", 
+            style: "background: white; border: 1px solid var(--pico-muted-border-color); color: #374151; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; font-weight: 500;",
+            name: "draft",
+            data: { 
+              action: "click->editor#saveDraft",
+              disable_with: "Saving..."
+            } %>
+        
+        <!-- Publish -->
+        <%= form.submit "Publish", 
+            style: "background: var(--pico-primary-background); border: 1px solid var(--pico-primary-border); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; font-weight: 500;",
+            name: "publish",
+            value: "Publish",
+            data: { 
+              action: "click->editor#publish",
+              disable_with: "Publishing...",
+              confirm: post.persisted? ? "This will update your published post on Bluesky. Continue?" : "Ready to publish this post to Bluesky?"
+            } %>
+      </div>
+    </div>
+  <% end %>

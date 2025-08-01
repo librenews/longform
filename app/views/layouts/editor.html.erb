@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title><%= content_for?(:title) ? yield(:title) : "Longform" %></title>
+    <meta name="description" content="<%= content_for?(:description) ? yield(:description) : "A simple, elegant longform writing platform" %>">
+
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    
+    <!-- Rails default includes -->
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    
+    <!-- Import maps and JavaScript -->
+    <%= javascript_importmap_tags %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    
+    <!-- Custom editor-specific styles -->
+    <style>
+      /* Editor-specific layout adjustments */
+      body {
+        background: #fafafa;
+        min-height: 100vh;
+      }
+      
+      /* Clean, minimal header for editor */
+      .editor-header {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 0;
+        margin-bottom: 0;
+      }
+      
+      /* Full-width editor container */
+      .editor-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        background: white;
+        min-height: calc(100vh - 80px);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Hide default container spacing */
+      main.container {
+        padding: 0;
+        max-width: none;
+      }
+      
+      /* Focus styles for distraction-free writing */
+      .editor-mode {
+        transition: all 0.3s ease;
+      }
+      
+      /* Custom fonts for better reading experience */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap');
+      
+      .editor-container {
+        font-family: 'Inter', sans-serif;
+      }
+      
+      /* Typography enhancements */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+      
+      /* Enhanced Editor Form Styles */
+      /* Clean title input */
+      input[name="post[title]"] {
+        color: var(--pico-color);
+        font-family: 'Inter', sans-serif;
+      }
+      
+      input[name="post[title]"]::placeholder {
+        color: var(--pico-muted-color);
+        opacity: 0.6;
+      }
+      
+      /* Enhanced Trix editor */
+      trix-editor {
+        border: none !important;
+        padding: 0 !important;
+        font-family: 'Source Serif Pro', Georgia, serif;
+        color: var(--pico-color);
+        background: transparent !important;
+        font-size: 1.2rem;
+        line-height: 1.8;
+      }
+      
+      trix-editor::placeholder {
+        color: var(--pico-muted-color);
+        opacity: 0.6;
+        font-style: italic;
+      }
+      
+      /* Better paragraph spacing */
+      trix-editor p {
+        margin-bottom: 1.8rem;
+      }
+      
+      /* Clean headings in editor */
+      trix-editor h1, trix-editor h2, trix-editor h3 {
+        color: var(--pico-color);
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+      
+      trix-editor h1 {
+        font-size: 2rem;
+        margin: 2rem 0 1rem 0;
+      }
+      
+      trix-editor h2 {
+        font-size: 1.5rem;
+        margin: 1.8rem 0 1rem 0;
+      }
+      
+      trix-editor h3 {
+        font-size: 1.25rem;
+        margin: 1.5rem 0 0.8rem 0;
+      }
+      
+      /* Hide default Trix toolbar - we want clean editing */
+      trix-toolbar {
+        display: none !important;
+      }
+      
+      /* Focus states for distraction-free editing */
+      input[name="post[title]"]:focus,
+      trix-editor:focus {
+        outline: none;
+      }
+      
+      /* Responsive design for mobile editing */
+      @media (max-width: 768px) {
+        input[name="post[title]"] {
+          font-size: 2rem;
+        }
+        
+        trix-editor {
+          font-size: 1.1rem;
+        }
+        
+        .writing-stats span {
+          display: block;
+          margin-left: 0 !important;
+        }
+        
+        .editor-header > div {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+      }
+      
+      /* Dark mode editor support */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #111827;
+        }
+        
+        .editor-header {
+          background: #1f2937;
+          border-bottom-color: #374151;
+        }
+        
+        .editor-container {
+          background: #1f2937;
+          color: #f9fafb;
+        }
+      }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        .editor-container {
+          padding: 1rem;
+          min-height: calc(100vh - 60px);
+        }
+        
+        .editor-header {
+          padding: 0.75rem 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Minimal editor header -->
+    <header class="editor-header">
+      <div class="container">
+        <%= yield :header_content %>
+      </div>
+    </header>
+
+    <!-- Main editor content -->
+    <main class="container">
+      <div class="editor-container">
+        <%= yield %>
+      </div>
+    </main>
+
+    <!-- Optional footer content -->
+    <% if content_for?(:footer_content) %>
+      <footer>
+        <div class="container">
+          <%= yield :footer_content %>
+        </div>
+      </footer>
+    <% end %>
+  </body>
+</html>

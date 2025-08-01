@@ -1,178 +1,26 @@
 <% content_for :title, "Edit: #{@post.title} - Longform" %>
 
-<main class="container">
-  <!-- Post Editor Header -->
-  <header style="border-bottom: 1px solid var(--pico-muted-border-color); padding-bottom: 1rem; margin-bottom: 2rem;">
-    <nav aria-label="breadcrumb" style="display: flex; gap: 1rem; align-items: center;">
-      <%= link_to @post, role: "button", class: "outline secondary" do %>
+<% content_for :header_content do %>
+  <!-- Editor Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <%= link_to @post, role: "button", class: "outline secondary", style: "margin: 0;" do %>
         ← View Post
       <% end %>
-      <%= link_to posts_path, role: "button", class: "outline secondary" do %>
+      <%= link_to posts_path, role: "button", class: "outline secondary", style: "margin: 0;" do %>
         All Posts
       <% end %>
-    </nav>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-      <h1 style="margin: 0;">Edit Post</h1>
-      
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <span class="save-status" style="color: var(--pico-muted-color); font-size: 0.875rem;">
-          <%= @post.updated_at > 5.minutes.ago ? "Recently saved" : "Draft saved" %>
-        </span>
-        
-        <% if @post.published? %>
-          <span style="background: var(--pico-ins-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">
-            PUBLISHED
-          </span>
-        <% else %>
-          <span style="background: var(--pico-muted-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">
-            DRAFT
-          </span>
-        <% end %>
-      </div>
+      <h2 style="margin: 0; font-weight: 500;">Edit Post</h2>
     </div>
-  </header>
+    
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span class="save-status" style="color: var(--pico-muted-color); font-size: 0.875rem;">
+        <%= @post.updated_at > 5.minutes.ago ? "Recently saved" : "Draft saved" %>
+      </span>
+      <div style="width: 8px; height: 8px; background: var(--pico-secondary-color); border-radius: 50%;"></div>
+    </div>
+  </div>
+<% end %>
 
-  <!-- Post Form -->
-  <%= form_with model: @post, local: true, data: { 
-        controller: "editor",
-        editor_save_url_value: post_path(@post)
-      } do |form| %>
-    
-    <!-- Display validation errors -->
-    <%= render 'shared/errors', object: @post %>
-    
-    <!-- Title -->
-    <div style="margin-bottom: 2rem;">
-      <%= form.text_field :title, 
-          placeholder: "Post title...", 
-          style: "font-size: 2.5rem; font-weight: 600; border: none; outline: none; width: 100%; background: transparent; padding: 0;",
-          data: { 
-            action: "input->editor#autoSave",
-            target: "editor.title"
-          } %>
-    </div>
-    
-    <!-- Rich Text Editor -->
-    <div style="margin-bottom: 2rem;">
-      <%= form.rich_text_area :content,
-          placeholder: "Continue writing your longform post...",
-          style: "min-height: 60vh; font-size: 1.125rem; line-height: 1.7;",
-          data: {
-            target: "editor.content",
-            action: "trix-change->editor#trixChange"
-          } %>
-    </div>
-    
-    <!-- Actions -->
-    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid var(--pico-muted-border-color);">
-      <div class="writing-stats" style="font-size: 0.875rem; color: var(--pico-muted-color);">
-        <span>Words: <strong id="word-count"><%= @post.word_count %></strong></span>
-        <span style="margin-left: 1rem;">Reading time: <strong id="reading-time"><%= @post.reading_time_minutes %> min</strong></span>
-      </div>
-      
-      <div style="display: flex; gap: 0.5rem;">
-        <%= form.submit "Save Draft", class: "outline" %>
-        
-        <% if @post.can_publish? %>
-          <%= button_to "Publish", publish_post_path(@post), 
-              method: :patch,
-              data: { confirm: "Ready to publish this post to Bluesky?" } %>
-        <% elsif @post.published? %>
-          <%= button_to "Unpublish", unpublish_post_path(@post), 
-              method: :patch, 
-              class: "outline",
-              data: { confirm: "Move this post back to drafts?" } %>
-        <% end %>
-
-        <% if @post.archived? %>
-          <%= button_to "Unarchive", unarchive_post_path(@post), 
-              method: :patch, 
-              class: "outline",
-              data: { confirm: "Unarchive this post?" } %>
-        <% else %>
-          <%= button_to "Archive", archive_post_path(@post), 
-              method: :patch, 
-              class: "outline",
-              data: { confirm: "Archive this post?" } %>
-        <% end %>
-        
-        <%= button_to "Delete", @post, 
-            method: :delete, 
-            class: "outline contrast",
-            data: { confirm: "Are you sure? This cannot be undone." } %>
-      </div>
-    </div>
-    
-  <% end %>
-</main>
-
-<!-- Enhanced Editor Styles -->
-<style>
-  /* Clean title input */
-  input[name="post[title]"] {
-    color: var(--pico-color);
-    font-family: var(--pico-font-family);
-  }
-  
-  input[name="post[title]"]::placeholder {
-    color: var(--pico-muted-color);
-    opacity: 0.7;
-  }
-  
-  /* Enhanced Trix editor */
-  trix-editor {
-    border: none !important;
-    padding: 0 !important;
-    font-family: var(--pico-font-family);
-    color: var(--pico-color);
-    background: transparent !important;
-  }
-  
-  trix-editor::placeholder {
-    color: var(--pico-muted-color);
-    opacity: 0.7;
-  }
-  
-  /* Better paragraph spacing */
-  trix-editor p {
-    margin-bottom: 1.5rem;
-  }
-  
-  /* Clean headings */
-  trix-editor h1, trix-editor h2, trix-editor h3 {
-    color: var(--pico-color);
-    font-family: var(--pico-font-family);
-  }
-  
-  /* Hide default Trix toolbar - we'll add our own if needed */
-  trix-toolbar {
-    display: none;
-  }
-  
-  /* Save status styling */
-  .save-success {
-    color: var(--pico-ins-color) !important;
-  }
-  
-  .save-error {
-    color: var(--pico-del-color) !important;
-  }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    input[name="post[title]"] {
-      font-size: 2rem;
-    }
-    
-    .writing-stats span {
-      display: block;
-      margin-left: 0 !important;
-    }
-    
-    nav[aria-label="breadcrumb"] {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-  }
-</style>
+<!-- Post Form -->
+<%= render 'editor_form', post: @post %>
