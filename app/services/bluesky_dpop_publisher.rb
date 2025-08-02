@@ -119,6 +119,7 @@ class BlueskyDpopPublisher
     dpop_token = generate_dpop_token('POST', url)
     
     # Prepare content - convert HTML to markdown for better blog compatibility
+    # Ensure ActionText content is rendered with proper URL options
     markdown_content = convert_to_markdown(content)
     
     # Build the blog entry record according to Whitewind lexicon
@@ -195,8 +196,29 @@ class BlueskyDpopPublisher
     # Use reverse_markdown for professional HTML to Markdown conversion
     require 'reverse_markdown'
     
+    # Get the correct host from Rails configuration
+    app_host = Rails.application.config.app_url || 'https://dev.libre.news'
+    app_host = app_host.gsub(/\/$/, '') # Remove trailing slash if present
+    
+    # Fix any example.org URLs that should use the actual domain
+    fixed_content = html_content.gsub(/https?:\/\/example\.org/, app_host)
+    
+    # Fix relative URLs for ActiveStorage
+    fixed_content = fixed_content.gsub(/src="\/rails\/active_storage/, "src=\"#{app_host}/rails/active_storage")
+    fixed_content = fixed_content.gsub(/href="\/rails\/active_storage/, "href=\"#{app_host}/rails/active_storage")
+    
+    # Also fix any URLs that might have been generated with wrong protocol
+    fixed_content = fixed_content.gsub(/http:\/\/dev\.libre\.news/, 'https://dev.libre.news')
+    
+    Rails.logger.debug "Original HTML content: #{html_content}"
+    Rails.logger.debug "Fixed HTML content: #{fixed_content}"
+    
     # Convert HTML to markdown with simple options
-    ReverseMarkdown.convert(html_content, unknown_tags: :bypass, github_flavored: true)
+    markdown = ReverseMarkdown.convert(fixed_content, unknown_tags: :bypass, github_flavored: true)
+    
+    Rails.logger.debug "Converted markdown: #{markdown}"
+    
+    markdown
   end
 
   def access_token_hash
