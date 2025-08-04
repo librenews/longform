@@ -69,6 +69,9 @@
                   <small><%= current_user.handle %></small>
                 </li>
                 <li>
+                  <%= link_to "My Profile", profile_path(current_user.handle) %>
+                </li>
+                <li>
                   <%= link_to sign_out_path, data: { "turbo-method": :delete } do %>
                     Sign Out
                   <% end %>

@@ -25,6 +25,9 @@ Rails.application.routes.draw do
   # Dashboard
   get "/dashboard", to: "dashboard#index", as: :dashboard
 
+  # User profiles
+  get "/profile/:handle", to: "profiles#show", as: :profile, constraints: { handle: /[^\/]+/ }
+
   # Posts
   resources :posts do
     member do

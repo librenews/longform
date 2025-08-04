@@ -1,0 +1,171 @@
+<% content_for :title, "#{@user.display_name || @user.handle} - Profile" %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Profile Header -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="flex items-start space-x-6">
+      <!-- Avatar -->
+      <div class="flex-shrink-0">
+        <% if @user.avatar.present? %>
+          <%= image_tag @user.avatar, alt: @user.display_name || @user.handle, 
+                        class: "w-20 h-20 rounded-full object-cover border-2 border-gray-200" %>
+        <% else %>
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-gray-200">
+            <span class="text-white text-2xl font-bold">
+              <%= (@user.display_name || @user.handle).first.upcase %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- Profile Info -->
+      <div class="flex-1 min-w-0">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          <%= @user.display_name || @user.handle %>
+        </h1>
+        
+        <div class="text-gray-600 mb-4">
+          <p class="font-medium">@<%= @user.handle %></p>
+          <% if @user.email.present? && (@user == current_user) %>
+            <p class="text-sm"><%= @user.email %></p>
+          <% end %>
+        </div>
+        
+        <!-- Bluesky Profile Link -->
+        <div class="flex items-center space-x-4 text-sm text-gray-500">
+          <a href="https://bsky.app/profile/<%= @user.handle %>" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/>
+            </svg>
+            View on Bluesky
+          </a>
+          
+          <span class="text-gray-400">•</span>
+          <span><%= pluralize(@latest_posts.count, 'blog post') %></span>
+          <% if @latest_posts.any? %>
+            <span class="text-gray-400">•</span>
+            <span><%= pluralize(@latest_posts.sum { |p| p[:word_count] || 0 }, 'word') %> total</span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Blog Posts -->
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900">Latest Blog Posts</h2>
+      <span class="text-sm text-gray-500">From Bluesky AT Protocol</span>
+    </div>
+
+    <% if @latest_posts.any? %>
+      <div class="grid gap-6">
+        <% @latest_posts.each do |post| %>
+          <article class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <!-- Post Header -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <% if post[:title].present? %>
+                  <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                    <%= post[:title] %>
+                  </h3>
+                <% end %>
+                
+                <div class="flex items-center text-sm text-gray-500 space-x-4">
+                  <time datetime="<%= post[:created_at] %>">
+                    <%= time_ago_in_words(Time.parse(post[:created_at])) %> ago
+                  </time>
+                  
+                  <span class="text-gray-400">•</span>
+                  
+                  <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                    <%= post[:visibility].capitalize %>
+                  </span>
+                  
+                  <% if post[:word_count] && post[:word_count] > 0 %>
+                    <span class="text-gray-400">•</span>
+                    <span><%= pluralize(post[:word_count], 'word') %></span>
+                  <% end %>
+                </div>
+              </div>
+              
+              <!-- AT Protocol URI -->
+              <div class="flex-shrink-0 ml-4">
+                <button onclick="copyToClipboard('<%= post[:uri] %>')" 
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                        title="Copy AT Protocol URI">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="prose prose-gray max-w-none">
+              <% if post[:preview].present? %>
+                <%= simple_format(post[:preview]) %>
+              <% elsif post[:content].present? %>
+                <% content_preview = post[:content].to_s.strip %>
+                <% if content_preview.length > 300 %>
+                  <%= simple_format(content_preview.first(300) + "...") %>
+                <% else %>
+                  <%= simple_format(content_preview) %>
+                <% end %>
+              <% else %>
+                <p class="text-gray-500 italic">No content preview available</p>
+              <% end %>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="mt-4 pt-4 border-t border-gray-100">
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <span>Published via AT Protocol</span>
+                <a href="https://bsky.app/profile/<%= @user.handle %>" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="text-blue-600 hover:text-blue-800 transition-colors">
+                  View on Bluesky →
+                </a>
+              </div>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- No Posts State -->
+      <div class="bg-gray-50 rounded-lg p-8 text-center">
+        <div class="text-gray-400 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No blog posts yet</h3>
+        <p class="text-gray-500 mb-4">
+          <%= @user.display_name || @user.handle %> hasn't published any blog posts to Bluesky yet.
+        </p>
+        <% if @user == current_user %>
+          <%= link_to "Create your first post", new_post_path, 
+                      class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Copy to Clipboard Script -->
+<script>
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    // You could add a toast notification here
+    console.log('Copied to clipboard: ' + text);
+  }).catch(function(err) {
+    console.error('Could not copy text: ', err);
+  });
+}
+</script>
