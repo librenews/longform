@@ -1,4 +1,6 @@
-<%= form_with model: post, local: true, data: { 
+<%= form_with model: post, local: true, 
+    html: { id: "post-form", data: { auto_save: true, auto_save_interval: 15000 } },
+    data: { 
       controller: "editor",
       editor_save_url_value: post.persisted? ? post_path(post) : posts_path
     } do |form| %>

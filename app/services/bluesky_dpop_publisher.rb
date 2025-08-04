@@ -10,6 +10,11 @@ class BlueskyDpopPublisher
     return { success: false, error: "User not authenticated with Bluesky" } unless @user.has_valid_bluesky_token?
 
     begin
+      # Verify token is still valid before attempting to publish
+      unless verify_token_valid
+        return { success: false, error: "Authentication token is no longer valid. Please sign in again." }
+      end
+      
       # Create the blog entry using Whitewind lexicon for longform content
       result = create_blog_entry(title, content, post_url)
       
@@ -60,6 +65,26 @@ class BlueskyDpopPublisher
   end
 
   private
+
+  def verify_token_valid
+    return false unless @user.access_token.present?
+    
+    begin
+      response = Faraday.get("#{pds_endpoint}/xrpc/com.atproto.server.getSession") do |req|
+        req.headers['Authorization'] = "Bearer #{@user.access_token}"
+      end
+      
+      if response.status == 401
+        Rails.logger.warn "Token validation failed during publish for user #{@user.id}"
+        return false
+      end
+      
+      response.success?
+    rescue => e
+      Rails.logger.error "Token validation error during publish: #{e.message}"
+      false
+    end
+  end
 
   def create_blog_entry(title, content, post_url)
     # Use PDS endpoint for creating records with Whitewind blog lexicon

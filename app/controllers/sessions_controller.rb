@@ -48,7 +48,16 @@ class SessionsController < ApplicationController
     
     if user&.persisted?
       session[:user_id] = user.id
-      redirect_to dashboard_path, notice: 'Successfully signed in with Bluesky!'
+      
+      # Check for preserved form data and redirect appropriately
+      if session[:preserved_form_data].present?
+        flash[:notice] = 'Successfully signed in! Your previous changes have been restored.'
+        redirect_to session.delete(:return_to) || dashboard_path
+      elsif session[:return_to].present?
+        redirect_to session.delete(:return_to)
+      else
+        redirect_to dashboard_path, notice: 'Successfully signed in with Bluesky!'
+      end
     else
       redirect_to root_path, alert: 'There was an error signing you in. Please try again.'
     end

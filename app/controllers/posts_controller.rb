@@ -31,6 +31,14 @@ class PostsController < ApplicationController
   
   def new
     @post = current_user.posts.build
+    
+    # Restore preserved form data if available
+    if (preserved_data = restore_form_data)
+      if preserved_data[:post].present?
+        @post.assign_attributes(preserved_data[:post])
+        flash.now[:notice] = "Your previous changes have been restored."
+      end
+    end
   end
   
   def create
@@ -66,6 +74,14 @@ class PostsController < ApplicationController
   
   def edit
     # Edit post form
+    
+    # Restore preserved form data if available
+    if (preserved_data = restore_form_data)
+      if preserved_data[:post].present?
+        @post.assign_attributes(preserved_data[:post])
+        flash.now[:notice] = "Your previous changes have been restored."
+      end
+    end
   end
   
   def update

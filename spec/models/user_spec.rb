@@ -124,6 +124,139 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe '#token_expired?' do
+    it 'returns false when token_expires_at is nil' do
+      user = build(:user, token_expires_at: nil)
+      expect(user.token_expired?).to be false
+    end
+
+    it 'returns false when token has not expired' do
+      user = build(:user, token_expires_at: 1.hour.from_now)
+      expect(user.token_expired?).to be false
+    end
+
+    it 'returns true when token has expired' do
+      user = build(:user, token_expires_at: 1.hour.ago)
+      expect(user.token_expired?).to be true
+    end
+  end
+
+  describe '#valid_token?' do
+    it 'returns true when access_token is present and not expired' do
+      user = build(:user, access_token: 'valid_token', token_expires_at: 1.hour.from_now)
+      expect(user.valid_token?).to be true
+    end
+
+    it 'returns false when access_token is missing' do
+      user = build(:user, access_token: nil, token_expires_at: 1.hour.from_now)
+      expect(user.valid_token?).to be false
+    end
+
+    it 'returns false when token is expired' do
+      user = build(:user, access_token: 'valid_token', token_expires_at: 1.hour.ago)
+      expect(user.valid_token?).to be false
+    end
+  end
+
+  describe '#has_valid_bluesky_token?' do
+    it 'returns true for atproto provider with valid token' do
+      user = build(:user, provider: 'atproto', access_token: 'valid_token', token_expires_at: 1.hour.from_now)
+      expect(user.has_valid_bluesky_token?).to be true
+    end
+
+    it 'returns false for non-atproto provider' do
+      user = build(:user, provider: 'github', access_token: 'valid_token', token_expires_at: 1.hour.from_now)
+      expect(user.has_valid_bluesky_token?).to be false
+    end
+
+    it 'returns false when access_token is missing' do
+      user = build(:user, provider: 'atproto', access_token: nil)
+      expect(user.has_valid_bluesky_token?).to be false
+    end
+
+    it 'returns false when token is expired' do
+      user = build(:user, provider: 'atproto', access_token: 'valid_token', token_expires_at: 1.hour.ago)
+      expect(user.has_valid_bluesky_token?).to be false
+    end
+  end
+
+  describe '#clear_bluesky_tokens!' do
+    it 'clears all token-related fields' do
+      user = create(:user, access_token: 'token', refresh_token: 'refresh', token_expires_at: 1.hour.from_now)
+      
+      user.clear_bluesky_tokens!
+      user.reload
+      
+      expect(user.access_token).to be_nil
+      expect(user.refresh_token).to be_nil
+      expect(user.token_expires_at).to be_nil
+    end
+  end
+
+  describe '#pds_endpoint' do
+    let(:user) { create(:user, uid: 'did:plc:test123') }
+
+    it 'resolves PDS endpoint from DID document' do
+      stub_request(:get, "https://plc.directory/did:plc:test123")
+        .to_return(
+          status: 200,
+          body: {
+            service: [
+              {
+                id: '#atproto_pds',
+                serviceEndpoint: 'https://custom.pds.example'
+              }
+            ]
+          }.to_json
+        )
+
+      expect(user.pds_endpoint).to eq('https://custom.pds.example')
+    end
+
+    it 'falls back to default when DID resolution fails' do
+      stub_request(:get, "https://plc.directory/did:plc:test123")
+        .to_return(status: 404)
+
+      expect(user.pds_endpoint).to eq('https://bsky.social')
+    end
+
+    it 'falls back to default when service endpoint is missing' do
+      stub_request(:get, "https://plc.directory/did:plc:test123")
+        .to_return(
+          status: 200,
+          body: {
+            service: []
+          }.to_json
+        )
+
+      expect(user.pds_endpoint).to eq('https://bsky.social')
+    end
+
+    it 'caches the resolved endpoint' do
+      stub_request(:get, "https://plc.directory/did:plc:test123")
+        .to_return(
+          status: 200,
+          body: {
+            service: [
+              {
+                id: '#atproto_pds',
+                serviceEndpoint: 'https://custom.pds.example'
+              }
+            ]
+          }.to_json
+        )
+
+      # First call should make the request
+      expect(user.pds_endpoint).to eq('https://custom.pds.example')
+      
+      # Second call should use cached value
+      expect(user.pds_endpoint).to eq('https://custom.pds.example')
+      
+      # Should only have made one request
+      expect(WebMock).to have_requested(:get, "https://plc.directory/did:plc:test123").once
+    end
+  end
+
   describe '#published_posts' do
     let(:user) { create(:user) }
     let!(:published_post) { create(:post, :published, user: user) }

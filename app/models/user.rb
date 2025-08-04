@@ -58,6 +58,40 @@ class User < ApplicationRecord
     provider == 'atproto' && access_token.present? && !token_expired?
   end
   
+  # Get the user's PDS endpoint for API calls
+  def pds_endpoint
+    @pds_endpoint ||= resolve_pds_endpoint
+  end
+  
+  def resolve_pds_endpoint
+    # Use the DID resolution service to find the user's PDS
+    return 'https://bsky.social' unless uid.present?
+    
+    did_doc_url = "https://plc.directory/#{uid}"
+    
+    response = Faraday.get(did_doc_url)
+    
+    if response.success?
+      did_doc = JSON.parse(response.body)
+      
+      # Find the PDS service endpoint
+      services = did_doc['service'] || []
+      pds_service = services.find { |service| service['id'] == '#atproto_pds' }
+      
+      if pds_service && pds_service['serviceEndpoint']
+        Rails.logger.debug "Resolved PDS endpoint: #{pds_service['serviceEndpoint']}"
+        return pds_service['serviceEndpoint']
+      end
+    end
+    
+    # Fallback to default if resolution fails
+    Rails.logger.warn "Could not resolve PDS endpoint for #{uid}, using fallback"
+    'https://bsky.social'
+  rescue => e
+    Rails.logger.error "Error resolving PDS endpoint: #{e.message}"
+    'https://bsky.social'
+  end
+  
   # Scopes for posts
   def published_posts
     posts.published

@@ -44,7 +44,43 @@ RSpec.describe BlueskyDpopPublisher, type: :service do
       allow(service).to receive(:generate_dpop_token).and_return('dpop-token-123')
     end
 
-    context 'when successful' do
+    context 'when user is not authenticated with Bluesky' do
+      let(:invalid_user) { create(:user, access_token: nil) }
+      let(:invalid_service) { described_class.new(invalid_user) }
+
+      it 'returns error when user has no valid bluesky token' do
+        result = invalid_service.publish('Test Title', '<p>Content</p>', 'https://example.com')
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("User not authenticated with Bluesky")
+      end
+    end
+
+    context 'when token validation fails' do
+      before do
+        # Mock token verification failure
+        stub_request(:get, "https://test.pds.host/xrpc/com.atproto.server.getSession")
+          .with(headers: { 'Authorization' => "Bearer #{user.access_token}" })
+          .to_return(status: 401, body: '{"error": "Invalid token"}')
+      end
+
+      it 'returns error when token is no longer valid' do
+        result = service.publish('Test Title', '<p>Content</p>', 'https://example.com')
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("Authentication token is no longer valid. Please sign in again.")
+      end
+    end
+
+    context 'when token validation succeeds' do
+      before do
+        # Mock successful token verification
+        stub_request(:get, "https://test.pds.host/xrpc/com.atproto.server.getSession")
+          .with(headers: { 'Authorization' => "Bearer #{user.access_token}" })
+          .to_return(status: 200, body: '{"did": "test"}')
+      end
+
+      context 'when successful' do
       let(:post_url) { "https://longform.test/posts/#{post.id}" }
       
       it 'creates a blog entry record' do
